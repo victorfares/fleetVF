@@ -1,0 +1,25 @@
+@baseUrl = http://localhost:3000
+### 1. Criar uma Nova Agência
+POST {{baseUrl}}/agencies
+Content-Type: application/json
+
+{
+  "name": "FleetVF Matriz",
+  "city": "São Paulo",
+  "state": "SP"
+}
+### 2. Listar Todas as Agências
+GET {{baseUrl}}/agencies
+
+### 3. Buscar uma Agência por ID (Exemplo ID 1)
+GET {{baseUrl}}/agencies/1
+
+### 4. Atualizar uma Agência
+PATCH {{baseUrl}}/agencies/1
+Content-Type: application/json
+
+{
+  "name": "FleetVF Matriz Renovada"
+}
+### 7. Deletar uma Agência
+DELETE {{baseUrl}}/agencies/1
