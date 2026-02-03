@@ -3,13 +3,13 @@ import { IsString, IsNotEmpty } from 'class-validator';
 export class CreateAgencyDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  readonly name: string;
 
   @IsString()
   @IsNotEmpty()
-  city: string;
+  readonly city: string;
 
   @IsString()
   @IsNotEmpty()
-  state: string;
+  readonly state: string;
 }

@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateAgencyDto } from './dto/create-agency.dto';
 import { UpdateAgencyDto } from './dto/update-agency.dto';
 import { Agency } from './entities/agency.entity';
@@ -22,14 +27,36 @@ export class AgenciesService {
   }
 
   findOne(id: number) {
-    return this.agencies.find((item) => item.id === +id);
+    const agency = this.agencies.find((item) => item.id === +id);
+    if (!agency) {
+      throw new NotFoundException(`Agência com ID #${id} não encontrada`);
+    }
+    return agency;
   }
 
   update(id: number, updateAgencyDto: UpdateAgencyDto) {
-    return `This action updates a #${id} agency`;
+    const existingAgencyIndex = this.agencies.findIndex(
+      (item) => item.id === id,
+    );
+    if (existingAgencyIndex < 0) {
+      throw new NotFoundException(`Agência com ID #${id} não encontrada`);
+    }
+    const agency = this.agencies[existingAgencyIndex];
+    this.agencies[existingAgencyIndex] = {
+      ...agency,
+      ...updateAgencyDto,
+    };
+
+    return this.agencies[existingAgencyIndex];
   }
 
   remove(id: number) {
+    const existingAgencyIndex = this.agencies.findIndex(
+      (item) => item.id === id,
+    );
+    if (existingAgencyIndex < 0) {
+      throw new NotFoundException(`Agência com ID #${id} não encontrada`);
+    }
     return `This action removes a #${id} agency`;
   }
 }
