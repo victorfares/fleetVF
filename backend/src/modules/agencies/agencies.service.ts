@@ -1,19 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { CreateAgencyDto } from './dto/create-agency.dto';
 import { UpdateAgencyDto } from './dto/update-agency.dto';
+import { Agency } from './entities/agency.entity';
 
 @Injectable()
 export class AgenciesService {
+  private lastId = 1;
+  private agencies: Agency[] = [];
   create(createAgencyDto: CreateAgencyDto) {
-    return 'This action adds a new agency';
+    const newAgency: Agency = {
+      id: this.agencies.length + 1,
+      ...createAgencyDto,
+      createdAt: new Date(),
+    };
+    this.agencies.push(newAgency);
+    return newAgency;
   }
 
   findAll() {
-    return `This action returns all agencies`;
+    return this.agencies;
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} agency`;
+    return this.agencies.find((item) => item.id === +id);
   }
 
   update(id: number, updateAgencyDto: UpdateAgencyDto) {
