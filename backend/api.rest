@@ -43,7 +43,7 @@ GET {{baseUrl}}/agencies
 GET {{baseUrl}}/agencies/1
 
 ### 6. Atualizar uma Agência
-PATCH {{baseUrl}}/agencies/1
+PATCH {{baseUrl}}/agencies/3
 Content-Type: application/json
 
 {
