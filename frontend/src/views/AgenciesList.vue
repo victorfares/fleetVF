@@ -2,21 +2,22 @@
   <v-container>
     <v-row class="mb-4" align="center">
       <v-col>
-        <h1 class="text-h4 font-weight-bold">Gerenciar Agências</h1>
+        <h1 class="text-h4 font-weight-bold text-primary">Gerenciar Agências</h1>
+        <p class="text-body-1 text-grey">Visualize e cadastre suas unidades.</p>
       </v-col>
       <v-col class="text-right">
-        <v-btn color="primary" prepend-icon="mdi-plus" @click="openDialog">
+        <v-btn color="secondary" prepend-icon="mdi-plus" size="large" @click="openDialog">
           Nova Agência
         </v-btn>
       </v-col>
     </v-row>
 
-    <v-card>
+    <v-card elevation="2" variant="elevated" class="bg-white border-0">
       <v-data-table
         :headers="headers"
         :items="agencies"
         :loading="loading"
-        class="elevation-1"
+        hover
       >
         <template v-slot:item.createdAt="{ item }">
           {{ formatDate((item as any).createdAt) }}
@@ -24,27 +25,50 @@
       </v-data-table>
     </v-card>
 
-    <v-dialog v-model="dialog" max-width="600px">
-      <v-card>
-        <v-card-title>
-          <span class="text-h5">Nova Agência</span>
-        </v-card-title>
+    <v-dialog v-model="dialog" max-width="600px" transition="dialog-bottom-transition">
+      
+      <v-card 
+        theme="light" 
+        color="white" 
+        elevation="24" 
+        rounded="xl" 
+        variant="flat"
+        class="bg-white"
+      >
+        
+        <v-toolbar color="secondary" class="px-4">
+          <v-toolbar-title class="text-h6 font-weight-bold text-white">
+            <v-icon icon="mdi-office-building-plus" class="mr-2"></v-icon>
+            Nova Agência
+          </v-toolbar-title>
+          <v-btn icon="mdi-close" variant="text" color="white" @click="dialog = false"></v-btn>
+        </v-toolbar>
 
-        <v-card-text>
+        <v-card-text class="pt-6">
           <v-container>
             <v-row>
               <v-col cols="12">
                 <v-text-field
                   v-model="newAgency.name"
                   label="Nome da Agência"
+                  placeholder="Ex: FleetVF Matriz"
                   variant="outlined"
+                  base-color="black"
+                  color="primary"
+                  bg-color="white"
+                  class="text-high-emphasis"
                 ></v-text-field>
               </v-col>
               <v-col cols="12">
                 <v-text-field
                   v-model="newAgency.address"
                   label="Endereço Completo"
+                  placeholder="Rua, Número, Bairro"
                   variant="outlined"
+                  base-color="black"
+                  color="primary"
+                  bg-color="white"
+                  class="text-high-emphasis"
                 ></v-text-field>
               </v-col>
               <v-col cols="12" md="8">
@@ -52,6 +76,10 @@
                   v-model="newAgency.city"
                   label="Cidade"
                   variant="outlined"
+                  base-color="black"
+                  color="primary"
+                  bg-color="white"
+                  class="text-high-emphasis"
                 ></v-text-field>
               </v-col>
               <v-col cols="12" md="4">
@@ -60,19 +88,38 @@
                   label="UF"
                   maxlength="2"
                   variant="outlined"
+                  base-color="black"
+                  color="primary"
+                  bg-color="white"
+                  class="text-high-emphasis"
                 ></v-text-field>
               </v-col>
             </v-row>
           </v-container>
         </v-card-text>
 
-        <v-card-actions>
+        <v-divider></v-divider>
+
+        <v-card-actions class="pa-4 bg-grey-lighten-4">
           <v-spacer></v-spacer>
-          <v-btn color="blue-darken-1" variant="text" @click="dialog = false">
+          <v-btn 
+            color="grey-darken-3" 
+            variant="text" 
+            size="large" 
+            @click="dialog = false"
+            class="mr-2 font-weight-bold"
+          >
             Cancelar
           </v-btn>
-          <v-btn color="blue-darken-1" variant="elevated" @click="saveAgency">
-            Salvar
+          <v-btn 
+            color="secondary" 
+            variant="elevated" 
+            size="large" 
+            @click="saveAgency"
+            elevation="4"
+            class="font-weight-bold"
+          >
+            Salvar Agência
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -84,9 +131,8 @@
 import { ref, onMounted } from 'vue';
 import api from '../services/api';
 
-// 1. Definição da Interface (Resolve o erro "property does not exist on type never")
 interface Agency {
-  id?: number; // Opcional pois na criação ainda não tem ID
+  id?: number;
   name: string;
   city: string;
   state: string;
@@ -94,13 +140,10 @@ interface Agency {
   createdAt?: string;
 }
 
-// 2. Estado Reativo Tipado
-// Aqui dizemos explicitamente que é uma lista de 'Agency'
 const agencies = ref<Agency[]>([]); 
 const loading = ref(false);
 const dialog = ref(false);
 
-// Modelo para o Formulário
 const newAgency = ref<Agency>({
   name: '',
   city: '',
@@ -108,19 +151,15 @@ const newAgency = ref<Agency>({
   address: ''
 });
 
-// Configuração das Colunas (Vuetify)
 const headers = [
-  { title: 'ID', key: 'id' },
+  { title: 'ID', key: 'id', align: 'start' as const },
   { title: 'Nome', key: 'name' },
   { title: 'Cidade', key: 'city' },
   { title: 'UF', key: 'state' },
   { title: 'Endereço', key: 'address' },
-  { title: 'Criado em', key: 'createdAt' },
+  { title: 'Data Criação', key: 'createdAt' },
 ];
 
-// --- Métodos ---
-
-// Função auxiliar para formatar data sem poluir o template
 const formatDate = (dateString: string) => {
   if (!dateString) return '-';
   return new Date(dateString).toLocaleDateString('pt-BR');
@@ -136,8 +175,7 @@ const fetchAgencies = async () => {
     const response = await api.get('/agencies');
     agencies.value = response.data;
   } catch (error) {
-    console.error('Erro ao buscar agências:', error);
-    alert('Erro de conexão com o servidor.');
+    console.error('Erro ao buscar:', error);
   } finally {
     loading.value = false;
   }
@@ -145,20 +183,18 @@ const fetchAgencies = async () => {
 
 const saveAgency = async () => {
   if (!newAgency.value.name || !newAgency.value.address) {
-    alert('Preencha pelo menos Nome e Endereço.');
+    alert('Preencha Nome e Endereço.');
     return;
   }
 
   try {
     await api.post('/agencies', newAgency.value);
-    
-    // Sucesso: fecha, limpa e recarrega
     dialog.value = false;
     newAgency.value = { name: '', city: '', state: '', address: '' };
     await fetchAgencies();
   } catch (error) {
     console.error('Erro ao salvar:', error);
-    alert('Erro ao salvar agência.');
+    alert('Erro ao salvar.');
   }
 };
 
