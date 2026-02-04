@@ -34,7 +34,7 @@
       <v-list density="compact" nav>
         <v-list-item prepend-icon="mdi-home" title="Home" to="/"></v-list-item>
         <v-list-item prepend-icon="mdi-domain" title="Agências" to="/agencias"></v-list-item>
-        <v-list-item prepend-icon="mdi-car" title="Frota (Em Breve)" disabled></v-list-item>
+        <v-list-item prepend-icon="mdi-car" title="Veículos" value="fleet" to="/frota" active-color="secondary"></v-list-item>
         <v-list-item prepend-icon="mdi-chart-box-outline" title="Dashboards" disabled></v-list-item>
       </v-list>
     </v-navigation-drawer>

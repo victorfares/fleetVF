@@ -13,6 +13,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     AgencyFormDialog: typeof import('./components/AgencyFormDialog.vue')['default']
     AppFooter: typeof import('./components/AppFooter.vue')['default']
+    CarCard: typeof import('./components/CarCard.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

@@ -145,12 +145,26 @@ Content-Type: application/json
 ### Deletar um Carro
 DELETE {{baseUrl}}/cars/1
 
-### Teste de Fraude no Hodômetro (Erro 400 Bad Request)
-# Supondo que o carro ID 1 tenha 1000km rodados.
-# Tentamos atualizar para 500km.
+### Atualizar Imagem do Carro (ID 1)
 PATCH {{baseUrl}}/cars/4
 Content-Type: application/json
 
 {
-  "currentMileage": 500
+  "imageUrl": "https://grandbrasil.com.br/wp-content/uploads/2019/09/CorollaXei2024.png",
+  "status": "AVAILABLE" 
+}
+
+### Criar Honda Civic (Com Imagem Real)
+POST {{baseUrl}}/cars
+Content-Type: application/json
+
+{
+  "model": "Civic Touring 1.5 Turbo",
+  "brand": "Honda",
+  "licensePlate": "CIV-9988",
+  "dailyRate": 420.00,
+  "currentMileage": 15000,
+  "status": "AVAILABLE",
+  "imageUrl": "https://production.autoforce.com/uploads/version/profile_image/9523/model_main_webp_comprar-crystal-black-pearl_acd0c2c6a3.png.webp",
+  "agencyId": 8
 }
