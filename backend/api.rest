@@ -53,3 +53,104 @@ Content-Type: application/json
 
 ### 7. Deletar uma Agência
 DELETE {{baseUrl}}/agencies/1
+
+Excelente! Com o Service pronto para lidar com relacionamentos e atualizações parciais, o seu arquivo api.rest vai servir como um painel de controle para testar todo o ciclo de vida do carro.
+
+Copie o conteúdo abaixo para o seu arquivo api.rest.
+
+Adicionei comentários explicativos em cada requisição para você saber exatamente o que está testando (inclusive a transferência de agência e o erro de placa duplicada).
+
+HTTP
+
+@baseUrl = http://localhost:3000
+
+### ============================================================================
+### MÓDULO: CARROS (Gestão da Frota)
+### ============================================================================
+
+### ----------------------------------------------------------------------------
+### 1. CRIAÇÃO (CREATE)
+### ----------------------------------------------------------------------------
+
+### Criar Carro Novo (Vinculado à Agência 1)
+# Certifique-se que a Agência com ID 1 existe no banco!
+POST {{baseUrl}}/cars
+Content-Type: application/json
+
+{
+  "model": "Honda Civic Touring",
+  "brand": "Honda",
+  "licensePlate": "CIV-das",
+  "dailyRate": 350.00,
+  "currentMileage": 0,
+  "status": "AVAILABLE",
+  "imageUrl": "https://img.example.com/civic.png",
+  "agencyId": 1
+}
+
+### Teste de Duplicidade (Deve retornar erro 409 Conflict)
+# Tente criar outro carro com a MESMA placa "CIV-2026".
+# Se a sua lógica de try/catch estiver ativa, retornará uma mensagem amigável.
+POST {{baseUrl}}/cars
+Content-Type: application/json
+
+{
+  "model": "Civic Clonado",
+  "brand": "Honda",
+  "licensePlate": "CIV-2026",
+  "dailyRate": 100.00,
+  "currentMileage": 500,
+  "agencyId": 3
+}
+
+### ----------------------------------------------------------------------------
+### 2. LEITURA (READ)
+### ----------------------------------------------------------------------------
+
+### Listar Todos os Carros
+# Observe que o objeto "agency" deve vir preenchido dentro de cada carro.
+GET {{baseUrl}}/cars
+
+### Buscar Carro por ID
+# Substitua o '1' pelo ID de um carro que você acabou de criar.
+GET {{baseUrl}}/cars/4
+
+### Teste de Carro Inexistente (Deve retornar 404 Not Found)
+GET {{baseUrl}}/cars/999
+
+### ----------------------------------------------------------------------------
+### 3. ATUALIZAÇÃO (UPDATE)
+### ----------------------------------------------------------------------------
+
+PATCH {{baseUrl}}/cars/4
+Content-Type: application/json
+
+{
+  "currentMileage": 33,
+  "dailyRate": 320.00,
+  "status": "MAINTENANCE"
+}
+
+PATCH {{baseUrl}}/cars/1
+Content-Type: application/json
+
+{
+  "agencyId": 2
+}
+
+### ----------------------------------------------------------------------------
+### 4. REMOÇÃO (DELETE)
+### ----------------------------------------------------------------------------
+
+### Deletar um Carro
+DELETE {{baseUrl}}/cars/1
+
+### Teste de Fraude no Hodômetro (Erro 400 Bad Request)
+# Supondo que o carro ID 1 tenha 1000km rodados.
+# Tentamos atualizar para 500km.
+PATCH {{baseUrl}}/cars/4
+Content-Type: application/json
+
+{
+  "currentMileage": 500
+}

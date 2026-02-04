@@ -35,6 +35,7 @@ export class CreateCarDto {
   @IsOptional()
   @IsEnum(CarStatus)
   readonly status?: CarStatus;
+
   @IsNumber()
   @IsNotEmpty()
   readonly agencyId: number;

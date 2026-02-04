@@ -21,7 +21,7 @@ export class Car {
   @Column()
   brand: string;
 
-  @Column({ name: 'license_plate' })
+  @Column({ name: 'license_plate', unique: true })
   licensePlate: string;
 
   @Column('decimal', { name: 'daily_rate', precision: 10, scale: 2 })
