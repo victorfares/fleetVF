@@ -40,7 +40,7 @@ Content-Type: application/json
 GET {{baseUrl}}/agencies
 
 ### 5. Buscar uma Agência por ID
-GET {{baseUrl}}/agencies/1
+GET {{baseUrl}}/agencies/4
 
 ### 6. Atualizar uma Agência
 PATCH {{baseUrl}}/agencies/3
