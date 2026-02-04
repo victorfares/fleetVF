@@ -1,11 +1,12 @@
-# --- Dependências (Ignora em qualquer nível: raiz, back ou front) ---
+# --- Dependências ---
 node_modules/
 
-# --- Builds de Produção (NestJS gera 'dist', Vue gera 'dist' ou 'build') ---
+# --- Builds de Produção  ---
 dist/
 build/
 
-# --- Variáveis de Ambiente (SEGURANÇA MÁXIMA - Nunca suba isso) ---
+
+# --- Variáveis de Ambiente  ---
 .env
 .env.*.local
 *.env
@@ -17,7 +18,7 @@ yarn-error.log*
 logs/
 *.log
 
-# --- Arquivos de Sistema e IDE (Lixo do Windows/Mac/VSCode) ---
+# --- Arquivos de Sistema e IDE  ---
 .DS_Store
 Thumbs.db
 .vscode/
@@ -26,6 +27,6 @@ Thumbs.db
 # --- Testes e Cobertura ---
 coverage/
 
-# --- Docker (Se você decidir criar volumes locais no futuro) ---
+# --- Docker  ---
 .docker/
 postgres_data/
