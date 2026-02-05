@@ -1,10 +1,10 @@
 @baseUrl = http://localhost:3000
 
-### -------------------
-### GRUPO: AGÊNCIAS
-### -------------------
+### ============================================================================
+### MÓDULO: AGÊNCIAS (CRUD + PAGINAÇÃO)
+### ============================================================================
 
-### 1. Criar uma Nova Agência (Matriz)
+### 1. Criar Agência 1 (Matriz)
 POST {{baseUrl}}/agencies
 Content-Type: application/json
 
@@ -12,10 +12,10 @@ Content-Type: application/json
   "name": "FleetVF Matriz",
   "city": "São Paulo",
   "state": "SP",
-  "address": "Av. Paulista, 1000 - Bela Vista"
+  "address": "Av. Paulista, 1000"
 }
 
-### 2. Criar Outra Agência (Filial Rio)
+### 2. Criar Agência 2 (Filial Rio)
 POST {{baseUrl}}/agencies
 Content-Type: application/json
 
@@ -23,148 +23,153 @@ Content-Type: application/json
   "name": "FleetVF Rio",
   "city": "Rio de Janeiro",
   "state": "RJ",
-  "address": "Av. Atlântica, 500 - Copacabana"
-}
-###
-POST {{baseUrl}}/agencies
-Content-Type: application/json
-
-{
-  "name": "FleetVF São Caetano",
-  "city": "São Caetano",
-  "state": "SP",
-  "address": "Rua Amazonas, 123 - Centro"
+  "address": "Av. Atlântica, 500"
 }
 
-### 4. Listar Todas as Agências
+### 3. Listar Agências (Padrão)
+# Deve retornar { data: [...], count: X, limit: 10, offset: 0 }
 GET {{baseUrl}}/agencies
 
-### 5. Buscar uma Agência por ID
-GET {{baseUrl}}/agencies/4
+### 4. Listar Agências (Com Paginação)
+# Pede apenas 1 registro, pulando 0. Útil para testar se o "count" vem certo.
+GET {{baseUrl}}/agencies?limit=1&offset=0
 
-### 6. Atualizar uma Agência
-PATCH {{baseUrl}}/agencies/3
+### 5. Atualizar Agência
+# Substitua '1' pelo ID da Matriz se necessário
+PATCH {{baseUrl}}/agencies/2
 Content-Type: application/json
 
 {
-  "name": "FleetVF Matriz Renovada",
-  "address": "Av. Paulista, 2000 - Novo Prédio"
+  "name": "FleetVF Matriz Global",
+  "address": "Av. Paulista, 2000"
 }
 
-### 7. Deletar uma Agência
-DELETE {{baseUrl}}/agencies/1
+### 6. Deletar Agência
+# (Cuidado: só delete se não for usar nos testes abaixo)
+DELETE {{baseUrl}}/agencies/13
 
-Excelente! Com o Service pronto para lidar com relacionamentos e atualizações parciais, o seu arquivo api.rest vai servir como um painel de controle para testar todo o ciclo de vida do carro.
-
-Copie o conteúdo abaixo para o seu arquivo api.rest.
-
-Adicionei comentários explicativos em cada requisição para você saber exatamente o que está testando (inclusive a transferência de agência e o erro de placa duplicada).
-
-HTTP
-
-@baseUrl = http://localhost:3000
 
 ### ============================================================================
-### MÓDULO: CARROS (Gestão da Frota)
+### MÓDULO: CARROS (CRUD + PAGINAÇÃO)
 ### ============================================================================
 
-### ----------------------------------------------------------------------------
-### 1. CRIAÇÃO (CREATE)
-### ----------------------------------------------------------------------------
-
-### Criar Carro Novo (Vinculado à Agência 1)
-# Certifique-se que a Agência com ID 1 existe no banco!
+### 7. Criar Carro 1 (Civic - Agência 1)
 POST {{baseUrl}}/cars
 Content-Type: application/json
 
 {
   "model": "Honda Civic Touring",
   "brand": "Honda",
-  "licensePlate": "CIV-das",
+  "licensePlate": "CIV-2024",
   "dailyRate": 350.00,
-  "currentMileage": 0,
+  "currentMileage": 1000,
   "status": "AVAILABLE",
-  "imageUrl": "https://img.example.com/civic.png",
-  "agencyId": 1
-}
-
-### Teste de Duplicidade (Deve retornar erro 409 Conflict)
-# Tente criar outro carro com a MESMA placa "CIV-2026".
-# Se a sua lógica de try/catch estiver ativa, retornará uma mensagem amigável.
-POST {{baseUrl}}/cars
-Content-Type: application/json
-
-{
-  "model": "Civic Clonado",
-  "brand": "Honda",
-  "licensePlate": "CIV-2026",
-  "dailyRate": 100.00,
-  "currentMileage": 500,
-  "agencyId": 3
-}
-
-### ----------------------------------------------------------------------------
-### 2. LEITURA (READ)
-### ----------------------------------------------------------------------------
-
-### Listar Todos os Carros
-# Observe que o objeto "agency" deve vir preenchido dentro de cada carro.
-GET {{baseUrl}}/cars
-
-### Buscar Carro por ID
-# Substitua o '1' pelo ID de um carro que você acabou de criar.
-GET {{baseUrl}}/cars/4
-
-### Teste de Carro Inexistente (Deve retornar 404 Not Found)
-GET {{baseUrl}}/cars/999
-
-### ----------------------------------------------------------------------------
-### 3. ATUALIZAÇÃO (UPDATE)
-### ----------------------------------------------------------------------------
-
-PATCH {{baseUrl}}/cars/4
-Content-Type: application/json
-
-{
-  "currentMileage": 33,
-  "dailyRate": 320.00,
-  "status": "MAINTENANCE"
-}
-
-PATCH {{baseUrl}}/cars/1
-Content-Type: application/json
-
-{
+  "imageUrl": "https://grandbrasil.com.br/wp-content/uploads/2019/09/CorollaXei2024.png",
   "agencyId": 2
 }
 
-### ----------------------------------------------------------------------------
-### 4. REMOÇÃO (DELETE)
-### ----------------------------------------------------------------------------
-
-### Deletar um Carro
-DELETE {{baseUrl}}/cars/1
-
-### Atualizar Imagem do Carro (ID 1)
-PATCH {{baseUrl}}/cars/4
-Content-Type: application/json
-
-{
-  "imageUrl": "https://grandbrasil.com.br/wp-content/uploads/2019/09/CorollaXei2024.png",
-  "status": "AVAILABLE" 
-}
-
-### Criar Honda Civic (Com Imagem Real)
+### 8. Criar Carro 2 (Corolla - Agência 2)
 POST {{baseUrl}}/cars
 Content-Type: application/json
 
 {
-  "model": "Civic Touring 1.5 Turbo",
-  "brand": "Honda",
-  "licensePlate": "CIV-9988",
-  "dailyRate": 420.00,
-  "currentMileage": 15000,
+  "model": "Toyota Corolla XEi",
+  "brand": "Toyota",
+  "licensePlate": "COR-2025",
+  "dailyRate": 320.00,
+  "currentMileage": 500,
   "status": "AVAILABLE",
-  "imageUrl": "https://production.autoforce.com/uploads/version/profile_image/9523/model_main_webp_comprar-crystal-black-pearl_acd0c2c6a3.png.webp",
-  "agencyId": 8
+  "imageUrl": "https://image1.mobiauto.com.br/images/api/images/v1.0/219699978/transform/fl_progressive,f_webp,q_auto",
+  "agencyId": 3
 }
+
+### 9. Listar Carros (Padrão)
+# Deve retornar estrutura paginada
+GET {{baseUrl}}/cars
+
+### 10. Listar Carros (Paginação Específica)
+# Traz 5 carros, pulando os 2 primeiros (offset=2)
+GET {{baseUrl}}/cars?limit=5&offset=2
+
+### 11. Buscar Carro Único
+# Substitua pelo ID real de um carro criado
+GET {{baseUrl}}/cars/4
+
+### 12. Deletar Carro
+DELETE {{baseUrl}}/cars/4
+
+
+### ============================================================================
+### REGRAS DE NEGÓCIO E VALIDAÇÕES (Onde o sistema brilha)
+### ============================================================================
+
+### 13. ERRO: Quilometragem Menor (Anti-Fraude)
+# Tenta baixar a KM de 1000 para 500.
+# Esperado: 400 Bad Request
+PATCH {{baseUrl}}/cars/16
+Content-Type: application/json
+
+{
+  "currentMileage": 1
+}
+
+### 14. BLINDAGEM: Tentar mudar Placa
+# O sistema deve ignorar 'licensePlate' e atualizar só o preço.
+# Esperado: 200 OK (mas a placa não muda no banco)
+PATCH {{baseUrl}}/cars/16
+Content-Type: application/json
+
+{
+  "licensePlate": "FAKE-1234",
+  "dailyRate": 999.00
+}
+
+### 15. ERRO: Agência Inexistente (Integridade)
+# Tenta vincular a uma agência fantasma.
+# Esperado: 404 Not Found
+PATCH {{baseUrl}}/cars/16
+Content-Type: application/json
+
+{
+  "agencyId": 99999
+}
+
+### ============================================================================
+### TESTE DE INTEGRIDADE: "O EXPURGO" (Deleção de Agência)
+### ============================================================================
+
+### 16. Preparação: Criar Agência Temporária
+POST {{baseUrl}}/agencies
+Content-Type: application/json
+
+{
+  "name": "Agência Condenada",
+  "city": "Silent Hill",
+  "state": "SP",
+  "address": "Rua do Nevoeiro, 0"
+}
+# ⚠️ ANOTE O ID QUE RETORNAR AQUI (ex: ID 50)
+
+### 17. Preparação: Criar Carro vinculado a ela
+# ⚠️ USE O ID DA AGÊNCIA CRIADA ACIMA
+POST {{baseUrl}}/cars
+Content-Type: application/json
+
+{
+  "model": "Carro Órfão",
+  "brand": "Fiat",
+  "licensePlate": "RIP-9999",
+  "dailyRate": 50.00,
+  "currentMileage": 0,
+  "agencyId": 50
+}
+# ⚠️ ANOTE O ID DO CARRO (ex: ID 20)
+
+### 18. AÇÃO: Deletar a Agência
+# ⚠️ USE O ID DA AGÊNCIA (ex: 50)
+DELETE {{baseUrl}}/agencies/50
+
+### 19. VERIFICAÇÃO FINAL: O carro sobreviveu?
+# ⚠️ USE O ID DO CARRO (ex: 20)
+# Esperado: O carro existe, mas "agency": null
+GET {{baseUrl}}/cars/20

@@ -11,6 +11,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AgencyCard: typeof import('./components/AgencyCard.vue')['default']
     AgencyFormDialog: typeof import('./components/AgencyFormDialog.vue')['default']
     AppFooter: typeof import('./components/AppFooter.vue')['default']
     CarCard: typeof import('./components/CarCard.vue')['default']

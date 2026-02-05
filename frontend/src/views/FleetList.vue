@@ -32,7 +32,7 @@
         </v-col>
       </v-row>
 
-      <v-row v-else-if="filteredCars.length === 0">
+      <v-row v-else-if="cars.length === 0">
         <v-col cols="12" class="text-center mt-10">
           <v-icon icon="mdi-car-off" size="64" color="grey-lighten-1"></v-icon>
           <h3 class="text-h6 text-grey mt-4">Nenhum veículo encontrado.</h3>
@@ -45,10 +45,18 @@
           :key="car.id" 
           cols="12" sm="6" md="4" lg="3" xl="2"
         >
-          <CarCard 
-            :car="car" 
-            @reserve="handleReserve"
-          />
+          <CarCard :car="car" />
+        </v-col>
+      </v-row>
+
+      <v-row v-if="pageCount > 1 && !search" class="mt-6">
+        <v-col cols="12">
+          <v-pagination
+            v-model="page"
+            :length="pageCount"
+            color="primary"
+            rounded="circle"
+          ></v-pagination>
         </v-col>
       </v-row>
 
@@ -57,16 +65,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import api from '@/services/api';
-import CarCard from '@/components/CarCard.vue'; // <--- Import limpo
+import CarCard from '@/components/CarCard.vue';
 import type { Car } from '@/types/Car';
+import { usePagination } from '@/composables/usePagination'; // Importe o composable
 
 const cars = ref<Car[]>([]);
 const loading = ref(true);
 const search = ref('');
 
-// Computed
+// Configuração da Paginação (8 carros por vez)
+const { page, itemsPerPage, totalItems, pageCount, offset } = usePagination(8);
+
+// Filtro de Busca (Cliente-Side para simplicidade nesta etapa)
 const filteredCars = computed(() => {
   if (!search.value) return cars.value;
   const term = search.value.toLowerCase();
@@ -78,11 +90,20 @@ const filteredCars = computed(() => {
   );
 });
 
-// Actions
 const fetchCars = async () => {
+  loading.value = true;
   try {
-    const response = await api.get('/cars'); // Idealmente mover para CarsService.ts
-    cars.value = response.data;
+    const response = await api.get('/cars', {
+      params: {
+        limit: itemsPerPage.value,
+        offset: offset.value
+      }
+    });
+    
+    // Adaptação para estrutura paginada
+    cars.value = response.data.data;
+    totalItems.value = response.data.count;
+
   } catch (error) {
     console.error('Erro:', error);
   } finally {
@@ -90,9 +111,16 @@ const fetchCars = async () => {
   }
 };
 
-const handleReserve = (carId: number) => {
-  console.log('Reservar carro ID:', carId);
-};
+// Observa mudança de página para buscar novos dados
+watch(page, () => {
+  fetchCars();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+watch(search, (newVal) => {
+  if (newVal) {
+  }
+});
 
 onMounted(() => {
   fetchCars();

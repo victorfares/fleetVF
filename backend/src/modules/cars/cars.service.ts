@@ -9,20 +9,23 @@ import { UpdateCarDto } from './dto/update-car.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Car } from './entities/car.entity';
 import { Repository } from 'typeorm';
-import { Agency } from '../agencies/entities/agency.entity';
+import { AgenciesService } from '../agencies/agencies.service';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class CarsService {
   constructor(
     @InjectRepository(Car)
     private readonly carRepository: Repository<Car>,
+    private readonly agenciesService: AgenciesService,
   ) {}
   async create(createCarDto: CreateCarDto) {
     try {
       const { agencyId, ...carData } = createCarDto;
+      const agency = await this.agenciesService.findOne(agencyId);
       const car = this.carRepository.create({
         ...carData,
-        agency: { id: agencyId },
+        agency,
       });
       return await this.carRepository.save(car);
     } catch (error) {
@@ -35,12 +38,22 @@ export class CarsService {
     }
   }
 
-  async findAll() {
-    return this.carRepository.find({
-      // 'relations' diz ao TypeORM para fazer um JOIN e trazer os dados da agência dona
+  async findAll(paginationDto: PaginationDto) {
+    const { limit = 10, offset = 0 } = paginationDto || {};
+
+    const [results, total] = await this.carRepository.findAndCount({
+      take: limit,
+      skip: offset,
       relations: ['agency'],
       order: { createdAt: 'DESC' },
     });
+
+    return {
+      data: results,
+      count: total,
+      limit,
+      offset,
+    };
   }
 
   async findOne(id: number) {
@@ -58,6 +71,9 @@ export class CarsService {
 
   async update(id: number, updateCarDto: UpdateCarDto) {
     const carNoBanco = await this.findOne(id);
+    if (updateCarDto.agencyId) {
+      await this.agenciesService.findOne(updateCarDto.agencyId);
+    }
     if (
       updateCarDto.currentMileage !== undefined &&
       updateCarDto.currentMileage < carNoBanco.currentMileage
