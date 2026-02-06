@@ -1,83 +1,100 @@
 <template>
   <v-card 
-    elevation="0" 
-    class="h-100 rounded-lg border cursor-pointer transition-swing"
-    hover
+    class="mx-auto h-100 d-flex flex-column" 
+    elevation="2" 
+    hover 
+    border
+    @click="$emit('edit', car)"
   >
     <v-img
-      :src="car.imageUrl || 'https://placehold.co/600x400?text=Sem+Imagem'"
+      :src="car.imageUrl || 'https://cdn.vuetifyjs.com/images/cards/road.jpg'"
       height="200"
       cover
-      class="bg-grey-lighten-3"
+      class="align-end bg-grey-lighten-2"
     >
-      <div class="d-flex justify-end pa-2">
-        <v-chip 
-          :color="getStatusColor(car.status)" 
-          class="font-weight-bold" 
-          size="small" 
-          variant="flat"
-        >
-          {{ formatStatus(car.status) }}
-        </v-chip>
-      </div>
+      <v-card-title class="text-white font-weight-bold" style="background: rgba(0,0,0,0.6)">
+        {{car.brand}} {{ car.model }}
+      </v-card-title>
     </v-img>
 
-    <v-divider></v-divider>
+    <v-card-text class="pt-4 flex-grow-1">
+      <div class="d-flex justify-space-between align-center mb-4">
+        <v-chip
+          :color="statusColors[car.status]"
+          size="small"
+          label
+          class="font-weight-bold"
+        >
+          {{ statusTranslation[car.status] }}
+        </v-chip>
+        <span class="text-caption text-grey border px-2 py-1 rounded">
+          {{ car.licensePlate }}
+        </span>
+      </div>
 
-    <v-card-item class="pb-0">
-      <div class="text-h5 font-weight-bold text-grey-darken-3 mb-1">
-        {{ formatCurrency(car.dailyRate) }}
-        <span class="text-caption text-grey font-weight-regular">/dia</span>
-      </div>
-      <div class="text-body-1 text-truncate text-black font-weight-bold">
-        {{ car.brand }} {{ car.model }}
-      </div>
-    </v-card-item>
-
-    <v-card-text class="pt-2 text-caption text-grey-darken-1">
-      <div class="d-flex align-center mb-1">
-        <v-icon icon="mdi-speedometer" size="small" class="mr-1"></v-icon>
-        {{ car.currentMileage.toLocaleString('pt-BR') }} km
-      </div>
-      <div class="d-flex align-center">
-        <v-icon icon="mdi-map-marker" size="small" class="mr-1"></v-icon>
-        {{ car.agency?.city }} - {{ car.agency?.state }}
+      <div class="d-flex flex-column gap-2">
+        <div class="d-flex align-center text-body-2 text-grey-darken-2">
+          <v-icon icon="mdi-speedometer" size="small" class="mr-2" color="primary"></v-icon>
+          {{ formatNumber(car.currentMileage) }} km
+        </div>
+        
+        <div class="d-flex align-center text-body-2 text-grey-darken-2 mt-1">
+          <v-icon icon="mdi-map-marker" size="small" class="mr-2" color="error"></v-icon>
+          <span class="text-truncate">{{ car.agency?.city }} - {{ car.agency?.state }}</span>
+        </div>
       </div>
     </v-card-text>
 
-    <v-card-actions class="px-4 pb-4 pt-0">
+    <v-divider></v-divider>
+
+    <v-card-actions class="pa-4 bg-grey-lighten-5">
+      <div>
+        <span class="text-caption text-grey">Diária</span>
+        <div class="text-h6 font-weight-black text-grey-darken-4">
+          {{ formatCurrency(car.dailyRate) }}
+        </div>
+      </div>
+      
+      <v-spacer></v-spacer>
+      
       <v-btn 
-        block 
-        variant="flat" 
-        color="secondary" 
-        :disabled="car.status !== 'AVAILABLE'"
-        @click="$emit('reserve', car.id)"
+        v-if="car.status === CarStatus.AVAILABLE"
+        variant="tonal" 
+        color="black" 
+        class="font-weight-bold px-4"
+        @click.stop="$emit('reserve', car.id)"
       >
-        {{ car.status === 'AVAILABLE' ? 'Reservar Agora' : 'Indisponível' }}
+        Reservar
       </v-btn>
     </v-card-actions>
   </v-card>
 </template>
 
 <script setup lang="ts">
+import { CarStatus } from '@/types/Car';
 import type { Car } from '@/types/Car';
-import { useFormatters } from '@/composables/useFormatters';
 
 defineProps<{
   car: Car
 }>();
 
-defineEmits(['reserve']);
+defineEmits(['reserve', 'edit']);
 
-const { formatCurrency, formatStatus, getStatusColor } = useFormatters();
+const statusColors: Record<CarStatus, string> = {
+  [CarStatus.AVAILABLE]: 'success',
+  [CarStatus.RENTED]: 'info',
+  [CarStatus.MAINTENANCE]: 'warning',
+};
+
+const statusTranslation: Record<CarStatus, string> = {
+  [CarStatus.AVAILABLE]: 'Disponível',
+  [CarStatus.RENTED]: 'Alugado',
+  [CarStatus.MAINTENANCE]: 'Manutenção',
+};
+
+const formatCurrency = (val: number) => 
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+
+const formatNumber = (val: number) => 
+  new Intl.NumberFormat('pt-BR').format(val);
 </script>
-
-<style scoped>
-.transition-swing {
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
-}
-.v-card--hover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
-}
-</style>

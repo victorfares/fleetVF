@@ -1,3 +1,11 @@
+import type { Agency } from "./Agency";
+
+export enum CarStatus {
+  AVAILABLE = 'AVAILABLE',
+  RENTED = 'RENTED',
+  MAINTENANCE = 'MAINTENANCE',
+}
+
 export interface Car {
   id: number;
   model: string;
@@ -5,10 +13,17 @@ export interface Car {
   licensePlate: string;
   dailyRate: number;
   currentMileage: number;
-  status: 'AVAILABLE' | 'RENTED' | 'MAINTENANCE';
+  status: CarStatus;
   imageUrl?: string;
-  agency?: {
-    city: string;
-    state: string;
-  };
+  agency?: Agency
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+}
+
+export interface CarResponse {
+  data: Car[];
+  count: number;
+  limit: number;
+  offset: number;
 }

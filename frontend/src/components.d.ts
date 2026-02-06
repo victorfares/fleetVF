@@ -15,6 +15,8 @@ declare module 'vue' {
     AgencyFormDialog: typeof import('./components/AgencyFormDialog.vue')['default']
     AppFooter: typeof import('./components/AppFooter.vue')['default']
     CarCard: typeof import('./components/CarCard.vue')['default']
+    CarForm: typeof import('./components/CarForm.vue')['default']
+    CarFormDialog: typeof import('./components/CarFormDialog.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

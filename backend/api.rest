@@ -46,7 +46,7 @@ Content-Type: application/json
 
 ### 6. Deletar Agência
 # (Cuidado: só delete se não for usar nos testes abaixo)
-DELETE {{baseUrl}}/agencies/13
+DELETE {{baseUrl}}/agencies/9
 
 
 ### ============================================================================
@@ -67,13 +67,31 @@ Content-Type: application/json
   "imageUrl": "https://grandbrasil.com.br/wp-content/uploads/2019/09/CorollaXei2024.png",
   "agencyId": 2
 }
+###
+
+# -------------------------------------------------------
+# TESTE 2: Sucesso (Status Explícito)
+# Enviamos 'MAINTENANCE', ele deve aceitar
+# -------------------------------------------------------
+POST {{baseUrl}}/cars
+Content-Type: application/json
+
+{
+  "model": "Civic Quebrado",
+  "brand" : "Honda",
+  "licensePlate": "CIV-2222",
+  "dailyRate": 250.00,
+  "currentMileage": 10000,
+  "agencyId": 3,
+  "status": "MAINTENANCE"
+}
 
 ### 8. Criar Carro 2 (Corolla - Agência 2)
 POST {{baseUrl}}/cars
 Content-Type: application/json
 
 {
-  "model": "Toyota Corolla XEi",
+  "model": "tiger XEi",
   "brand": "Toyota",
   "licensePlate": "COR-2025",
   "dailyRate": 320.00,
@@ -91,12 +109,17 @@ GET {{baseUrl}}/cars
 # Traz 5 carros, pulando os 2 primeiros (offset=2)
 GET {{baseUrl}}/cars?limit=5&offset=2
 
+### 2. Testar a Busca (Por Exemplo: Civic)
+GET http://localhost:3000/cars?search=Renault
+
+### 3. Testar a Busca + Paginação
+GET http://localhost:3000/cars?search=Civic&limit=2&offset=0
 ### 11. Buscar Carro Único
 # Substitua pelo ID real de um carro criado
 GET {{baseUrl}}/cars/4
 
 ### 12. Deletar Carro
-DELETE {{baseUrl}}/cars/4
+DELETE {{baseUrl}}/cars/16
 
 
 ### ============================================================================
