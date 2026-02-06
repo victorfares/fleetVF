@@ -6,18 +6,27 @@ import { AgenciesModule } from '../modules/agencies/agencies.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CarsModule } from '../modules/cars/cars.module';
 import { TransformInterceptor } from '../common/interceptors/transform.interceptor';
-
+import { ConfigModule, ConfigService } from '@nestjs/config';
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'admin',
-      database: 'fleet_db',
-      password: 'adminpassword',
-      autoLoadEntities: true,
-      synchronize: true, //nao usar em produção
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        type: configService.get<any>('DB_TYPE'),
+
+        host: configService.get<string>('DB_HOST'),
+        port: configService.get<number>('DB_PORT'),
+        username: configService.get<string>('DB_USER'),
+        password: configService.get<string>('DB_PASS'),
+        database: configService.get<string>('DB_NAME'),
+
+        autoLoadEntities: configService.get<string>('DB_AUTOLOAD') === 'true',
+        synchronize: configService.get<string>('DB_SYNC') === 'true',
+      }),
     }),
     AgenciesModule,
     CarsModule,
