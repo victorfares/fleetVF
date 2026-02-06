@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateAgencyDto } from './dto/create-agency.dto';
 import { UpdateAgencyDto } from './dto/update-agency.dto';
 import { Agency } from './entities/agency.entity';
@@ -59,10 +59,18 @@ export class AgenciesService {
   }
 
   async remove(id: number) {
-    const agency = await this.agencyRepository.findOneBy({ id });
+    const agency = await this.agencyRepository.findOne({
+      where: { id },
+      relations: ['cars'],
+    });
     if (!agency) {
       throw new NotFoundException(`Agência com ID #${id} não encontrada`);
     }
-    return this.agencyRepository.remove(agency);
+    if (agency.cars && agency.cars.length > 0) {
+      throw new BadRequestException(
+        `Não é possível remover a agência "${agency.name}" pois ela possui ${agency.cars.length} carros vinculados. Mova os carros ou delete-os primeiro.`,
+      );
+    }
+    return this.agencyRepository.softRemove(agency);
   }
 }

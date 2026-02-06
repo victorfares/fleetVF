@@ -8,7 +8,7 @@ import { CreateCarDto } from './dto/create-car.dto';
 import { UpdateCarDto } from './dto/update-car.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Car } from './entities/car.entity';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { AgenciesService } from '../agencies/agencies.service';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 
@@ -20,28 +20,26 @@ export class CarsService {
     private readonly agenciesService: AgenciesService,
   ) {}
   async create(createCarDto: CreateCarDto) {
-    try {
-      const { agencyId, ...carData } = createCarDto;
-      const agency = await this.agenciesService.findOne(agencyId);
-      const car = this.carRepository.create({
-        ...carData,
-        agency,
-      });
-      return await this.carRepository.save(car);
-    } catch (error) {
-      if (error.code === '23505') {
-        throw new ConflictException(
-          'Já existe um veículo cadastrado com esta placa',
-        );
-      }
-      throw error;
-    }
+    const { agencyId, ...carData } = createCarDto;
+    const agency = await this.agenciesService.findOne(agencyId);
+    const car = this.carRepository.create({
+      ...carData,
+      agency,
+    });
+    return await this.carRepository.save(car);
   }
 
-  async findAll(paginationDto: PaginationDto) {
+  async findAll(paginationDto: PaginationDto, searchTerm?: string) {
     const { limit = 10, offset = 0 } = paginationDto || {};
+    const where = searchTerm
+      ? [
+          { model: ILike(`%${searchTerm}%`) }, // Busca por Modelo
+          { brand: ILike(`%${searchTerm}%`) },
+        ]
+      : {};
 
     const [results, total] = await this.carRepository.findAndCount({
+      where,
       take: limit,
       skip: offset,
       relations: ['agency'],
@@ -70,30 +68,25 @@ export class CarsService {
   }
 
   async update(id: number, updateCarDto: UpdateCarDto) {
-    const carNoBanco = await this.findOne(id);
+    const currentCar = await this.findOne(id);
+    if (
+      updateCarDto.currentMileage !== undefined &&
+      updateCarDto.currentMileage < currentCar.currentMileage
+    ) {
+      throw new BadRequestException(
+        `A quilometragem não pode ser reduzida. Atual: ${currentCar.currentMileage}, Tentativa: ${updateCarDto.currentMileage}`,
+      );
+    }
     if (updateCarDto.agencyId) {
       await this.agenciesService.findOne(updateCarDto.agencyId);
     }
-    if (
-      updateCarDto.currentMileage !== undefined &&
-      updateCarDto.currentMileage < carNoBanco.currentMileage
-    ) {
-      throw new BadRequestException(
-        `A quilometragem não pode ser reduzida. Atual: ${carNoBanco.currentMileage}, Tentativa: ${updateCarDto.currentMileage}`,
-      );
-    }
-    const { agencyId, ...data } = updateCarDto;
-    if ('licensePlate' in data) {
-      delete data['licensePlate'];
-    }
-    const dataToUpdate: any = {
+    const { agencyId, licensePlate, ...data } = updateCarDto as any;
+
+    const carToSave = await this.carRepository.preload({
       id,
       ...data,
-    };
-    if (agencyId) {
-      dataToUpdate.agency = { id: agencyId };
-    }
-    const carToSave = await this.carRepository.preload(dataToUpdate);
+      agency: agencyId ? { id: agencyId } : undefined,
+    });
     if (!carToSave) {
       throw new NotFoundException(`Carro com ID #${id} não encontrado`);
     }
@@ -103,6 +96,6 @@ export class CarsService {
 
   async remove(id: number) {
     const car = await this.findOne(id);
-    return this.carRepository.remove(car);
+    return this.carRepository.softRemove(car);
   }
 }

@@ -7,11 +7,13 @@ import {
   Param,
   Delete,
   Query,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { CarsService } from './cars.service';
 import { CreateCarDto } from './dto/create-car.dto';
 import { UpdateCarDto } from './dto/update-car.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { FindCarsDto } from './dto/find-cars.dto';
 
 @Controller('cars')
 export class CarsController {
@@ -23,22 +25,25 @@ export class CarsController {
   }
 
   @Get()
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.carsService.findAll(paginationDto);
+  findAll(@Query() query: FindCarsDto) {
+    return this.carsService.findAll(query, query.search);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.carsService.findOne(+id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCarDto: UpdateCarDto) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateCarDto: UpdateCarDto,
+  ) {
     return this.carsService.update(+id, updateCarDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseIntPipe) id: number) {
     return this.carsService.remove(+id);
   }
 }
