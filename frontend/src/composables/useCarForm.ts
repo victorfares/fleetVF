@@ -6,7 +6,7 @@ import type { Agency } from '@/types/Agency';
 
 interface UseCarFormProps {
   carToEdit?: Car | null;
-  onSaved: () => void; // Callback para quando salvar com sucesso
+  onSaved: () => void;
 }
 
 export function useCarForm(props: UseCarFormProps) {
@@ -28,10 +28,15 @@ export function useCarForm(props: UseCarFormProps) {
     imageUrl: ''
   });
 
+  // Regras de Validação
   const rules = {
-    required: (v: any) => !!v || 'Obrigatório',
-    positive: (v: number) => v > 0 || 'Deve ser positivo',
-    minKm: (v: number) => v >= 0 || 'Inválido'
+    required: (v: any) => !!v || 'Campo obrigatório',
+    positive: (v: number) => v > 0 || 'Valor deve ser positivo',
+    // Validação da KM anterior vs Nova KM
+    minCurrentKm: (v: number) => {
+      if (!isEditing.value || !props.carToEdit) return true;
+      return v >= props.carToEdit.currentMileage || `A KM não pode ser menor que a atual (${props.carToEdit.currentMileage} km)`;
+    }
   };
 
   const statusOptions = [
@@ -46,7 +51,7 @@ export function useCarForm(props: UseCarFormProps) {
       const response = await api.get('/agencies', { params: { limit: 100 } });
       agencies.value = response.data.data.data;
     } catch (error) {
-      console.error('Erro ao buscar agências', error);
+      console.error('Falha ao carregar agências', error);
     } finally {
       loadingAgencies.value = false;
     }
@@ -54,10 +59,14 @@ export function useCarForm(props: UseCarFormProps) {
 
   const initForm = () => {
     if (props.carToEdit) {
-      Object.assign(formData, {
-        ...props.carToEdit,
-        agencyId: props.carToEdit.agency?.id
-      });
+      formData.brand = props.carToEdit.brand;
+      formData.model = props.carToEdit.model;
+      formData.licensePlate = props.carToEdit.licensePlate;
+      formData.dailyRate = Number(props.carToEdit.dailyRate);
+      formData.currentMileage = Number(props.carToEdit.currentMileage);
+      formData.status = props.carToEdit.status;
+      formData.imageUrl = props.carToEdit.imageUrl || '';
+      formData.agencyId = props.carToEdit.agency?.id || null;
     }
   };
 
@@ -67,17 +76,35 @@ export function useCarForm(props: UseCarFormProps) {
 
     saving.value = true;
     try {
-      const payload = { ...formData };
-      
       if (isEditing.value && props.carToEdit) {
-        await api.patch(`/cars/${props.carToEdit.id}`, payload);
+        const patchPayload = {
+          dailyRate: Number(formData.dailyRate),
+          currentMileage: Number(formData.currentMileage),
+          imageUrl: formData.imageUrl,
+          status: formData.status
+        };
+
+        await api.patch(`/cars/${props.carToEdit.id}`, patchPayload);
+      
       } else {
-        await api.post('/cars', payload);
+        const postPayload = {
+          ...formData,
+          dailyRate: Number(formData.dailyRate),
+          currentMileage: Number(formData.currentMileage)
+        };
+        
+        await api.post('/cars', postPayload);
       }
       
-      props.onSaved(); // Avisa quem chamou que deu certo
-    } catch (error) {
-      console.error(error);
+      props.onSaved();
+    } catch (error: any) {
+      console.error('Erro ao salvar:', error);
+      const message = error.response?.data?.message;
+      if (Array.isArray(message)) {
+        alert(`Erro de Validação:\n- ${message.join('\n- ')}`);
+      } else {
+        alert(`Erro: ${message || 'Falha ao processar requisição.'}`);
+      }
     } finally {
       saving.value = false;
     }

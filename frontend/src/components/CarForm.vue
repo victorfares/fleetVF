@@ -4,7 +4,6 @@
     elevation="10" 
     style="background-color: white !important; opacity: 1 !important;"
   >
-    
     <v-toolbar color="white" class="border-b pr-4" height="70" flat>
       <v-toolbar-title class="text-h6 font-weight-black pl-6 text-black">
         {{ isEditing ? 'Editar Veículo' : 'Novo Veículo' }}
@@ -20,6 +19,9 @@
           <v-col cols="12" class="mb-2">
             <div class="text-subtitle-1 font-weight-black text-black">Dados do Carro</div>
             <v-divider class="my-2"></v-divider>
+            <div v-if="isEditing" class="text-caption text-warning mb-2">
+              * Dados de identificação não podem ser alterados.
+            </div>
           </v-col>
 
           <v-col cols="12" md="6">
@@ -33,6 +35,7 @@
               bg-color="white"
               density="comfortable"
               class="font-weight-bold"
+              :disabled="isEditing" 
               :rules="[rules.required]"
             ></v-text-field>
           </v-col>
@@ -48,6 +51,7 @@
               bg-color="white"
               density="comfortable"
               class="font-weight-bold"
+              :disabled="isEditing"
               :rules="[rules.required]"
             ></v-text-field>
           </v-col>
@@ -68,6 +72,7 @@
               bg-color="white"
               density="comfortable"
               class="text-uppercase font-weight-bold"
+              :disabled="isEditing"
               :rules="[rules.required]"
               maxlength="8"
             ></v-text-field>
@@ -101,7 +106,7 @@
               bg-color="white"
               density="comfortable"
               class="font-weight-bold"
-              :rules="[rules.required, rules.minKm]"
+              :rules="[rules.required, rules.minCurrentKm]" 
             ></v-text-field>
           </v-col>
           
@@ -119,6 +124,7 @@
               bg-color="white"
               density="comfortable"
               class="font-weight-bold"
+              :disabled="isEditing"
               :loading="loadingAgencies"
               :rules="[rules.required]"
               no-data-text="Nenhuma agência encontrada"
