@@ -75,10 +75,8 @@ const cars = ref<Car[]>([]);
 const loading = ref(true);
 const search = ref('');
 
-// Configuração da Paginação (8 carros por vez)
 const { page, itemsPerPage, totalItems, pageCount, offset } = usePagination(8);
 
-// Filtro de Busca (Cliente-Side para simplicidade nesta etapa)
 const filteredCars = computed(() => {
   if (!search.value) return cars.value;
   const term = search.value.toLowerCase();
@@ -100,9 +98,9 @@ const fetchCars = async () => {
       }
     });
     
-    // Adaptação para estrutura paginada
-    cars.value = response.data.data;
-    totalItems.value = response.data.count;
+    const apiResponse = response.data.data; 
+    cars.value = apiResponse.data;
+    totalItems.value = apiResponse.count;
 
   } catch (error) {
     console.error('Erro:', error);

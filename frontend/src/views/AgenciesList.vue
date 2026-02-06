@@ -83,8 +83,9 @@ const fetchAgencies = async () => {
     const response = await api.get('/agencies', {
       params: { limit: itemsPerPage.value, offset: offset.value }
     });
-    agencies.value = response.data.data;
-    totalItems.value = response.data.count;
+    const apiResponse = response.data.data;
+    agencies.value = apiResponse.data;
+    totalItems.value = apiResponse.count;
   } catch (error) {
     console.error('Erro:', error);
   } finally {

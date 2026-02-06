@@ -17,7 +17,7 @@ async function bootstrap() {
   app.enableCors();
 
   const config = new DocumentBuilder()
-    .setTitle('FleetMaster API')
+    .setTitle('FleetVF API')
     .setDescription('API de Gestão de Frotas')
     .setVersion('1.0')
     .build();
