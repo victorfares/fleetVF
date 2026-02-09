@@ -65,7 +65,7 @@ Content-Type: application/json
   "currentMileage": 1000,
   "status": "AVAILABLE",
   "imageUrl": "https://grandbrasil.com.br/wp-content/uploads/2019/09/CorollaXei2024.png",
-  "agencyId": 2
+  "agencyId": "23cd565c-1dc6-42f0-ad09-d6e795833854"
 }
 ###
 

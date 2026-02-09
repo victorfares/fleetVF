@@ -23,7 +23,7 @@ export function useCarForm(props: UseCarFormProps) {
     licensePlate: '',
     dailyRate: 0,
     currentMileage: 0,
-    agencyId: null as number | null,
+    agencyId: null as string | null,
     status: CarStatus.AVAILABLE,
     imageUrl: ''
   });

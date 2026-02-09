@@ -1,5 +1,4 @@
 import {
-  ConflictException,
   Injectable,
   NotFoundException,
   BadRequestException,
@@ -54,7 +53,7 @@ export class CarsService {
     };
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const car = await this.carRepository.findOne({
       where: { id },
       relations: ['agency'],
@@ -67,7 +66,7 @@ export class CarsService {
     return car;
   }
 
-  async update(id: number, updateCarDto: UpdateCarDto) {
+  async update(id: string, updateCarDto: UpdateCarDto) {
     const currentCar = await this.findOne(id);
     if (
       updateCarDto.currentMileage !== undefined &&
@@ -94,7 +93,7 @@ export class CarsService {
     return this.carRepository.save(carToSave);
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const car = await this.findOne(id);
     return this.carRepository.softRemove(car);
   }

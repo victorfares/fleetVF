@@ -5,6 +5,7 @@ import {
   IsString,
   IsOptional,
   IsEnum,
+  IsUUID,
 } from 'class-validator';
 
 export class CreateCarDto {
@@ -36,7 +37,7 @@ export class CreateCarDto {
   @IsEnum(CarStatus)
   readonly status?: CarStatus;
 
-  @IsNumber()
+  @IsUUID()
   @IsNotEmpty()
-  readonly agencyId: number;
+  readonly agencyId: string;
 }

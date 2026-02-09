@@ -29,16 +29,16 @@ export class AgenciesController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.agenciesService.findOne(+id);
+    return this.agenciesService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateAgencyDto: UpdateAgencyDto) {
-    return this.agenciesService.update(+id, updateAgencyDto);
+    return this.agenciesService.update(id, updateAgencyDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.agenciesService.remove(+id);
+    return this.agenciesService.remove(id);
   }
 }

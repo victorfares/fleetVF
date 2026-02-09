@@ -13,8 +13,8 @@ import { CarStatus } from '../enums/car-status.enum';
 
 @Entity()
 export class Car {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   model: string;

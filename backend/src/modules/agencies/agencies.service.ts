@@ -35,7 +35,7 @@ export class AgenciesService {
     };
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const agency = await this.agencyRepository.findOne({
       where: {
         id,
@@ -47,7 +47,7 @@ export class AgenciesService {
     return agency;
   }
 
-  async update(id: number, updateAgencyDto: UpdateAgencyDto) {
+  async update(id: string, updateAgencyDto: UpdateAgencyDto) {
     const agency = await this.agencyRepository.preload({
       id,
       ...updateAgencyDto,
@@ -58,7 +58,7 @@ export class AgenciesService {
     return this.agencyRepository.save(agency);
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const agency = await this.agencyRepository.findOne({
       where: { id },
       relations: ['cars'],
