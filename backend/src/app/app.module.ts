@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AgenciesModule } from '../modules/agencies/agencies.module';
@@ -10,6 +10,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AllExceptionsFilter } from '../common/filters/http-exception.filter';
 import { AuthModule } from 'src/auth/auth.module';
 import { UsersModule } from 'src/modules/users/users.module';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -18,7 +19,7 @@ import { UsersModule } from 'src/modules/users/users.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: async(configService: ConfigService) => ({
+      useFactory: async (configService: ConfigService) => ({
         type: configService.get<any>('DB_TYPE'),
         host: configService.get<string>('DB_HOST'),
         port: configService.get<number>('DB_PORT'),
@@ -45,6 +46,10 @@ import { UsersModule } from 'src/modules/users/users.module';
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
     },
   ],
 })

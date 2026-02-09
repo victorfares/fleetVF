@@ -7,6 +7,8 @@ import { ConfigModule } from '@nestjs/config';
 import jwtConfig from './config/jwt.config';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from 'src/modules/users/users.module';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Global()
 @Module({
@@ -14,6 +16,7 @@ import { UsersModule } from 'src/modules/users/users.module';
     ConfigModule.forFeature(jwtConfig),
     JwtModule.registerAsync(jwtConfig.asProvider()),
     UsersModule,
+    PassportModule,
   ],
   controllers: [AuthController],
   providers: [
@@ -22,7 +25,8 @@ import { UsersModule } from 'src/modules/users/users.module';
       useClass: BCryptService,
     },
     AuthService,
+    JwtStrategy,
   ],
-  exports: [AuthService, HashingServiceProtocol, JwtModule],
+  exports: [AuthService, HashingServiceProtocol, JwtModule, ConfigModule],
 })
 export class AuthModule {}
