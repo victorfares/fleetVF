@@ -8,6 +8,8 @@ import { CarsModule } from '../modules/cars/cars.module';
 import { TransformInterceptor } from '../common/interceptors/transform.interceptor';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AllExceptionsFilter } from '../common/filters/http-exception.filter';
+import { AuthModule } from 'src/auth/auth.module';
+import { UsersModule } from 'src/modules/users/users.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -30,6 +32,8 @@ import { AllExceptionsFilter } from '../common/filters/http-exception.filter';
     }),
     AgenciesModule,
     CarsModule,
+    AuthModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [
