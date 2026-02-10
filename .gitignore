@@ -30,3 +30,8 @@ coverage/
 # --- Docker  ---
 .docker/
 postgres_data/
+
+# Arquivos de Teste HTTP (REST Client)
+api.rest
+*.rest
+*.http

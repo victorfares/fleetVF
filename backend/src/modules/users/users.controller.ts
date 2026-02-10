@@ -11,9 +11,11 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { UserRole } from './enums/user-role.enum';
+import { User } from './entities/user.entity';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 
 @ApiBearerAuth('access-token')
 @Controller('users')
@@ -24,6 +26,12 @@ export class UsersController {
   @Roles(UserRole.ADMIN)
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
+  }
+
+  @Get('me')
+  @ApiOperation({ summary: 'Retorna os dados do usuário logado' })
+  async getProfile(@CurrentUser() user: User) {
+    return this.usersService.findOne(user.id);
   }
 
   @Get()

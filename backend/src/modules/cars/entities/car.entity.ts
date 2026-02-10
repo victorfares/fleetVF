@@ -11,7 +11,7 @@ import {
 import { Agency } from '../../agencies/entities/agency.entity';
 import { CarStatus } from '../enums/car-status.enum';
 
-@Entity()
+@Entity({ name: 'cars' })
 export class Car {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -41,6 +41,9 @@ export class Car {
   @Column({ name: 'image_url', nullable: true }) // Pode ser nulo se não tiver foto
   imageUrl: string;
 
+  @Column({ name: 'agency_id', nullable: true }) 
+  agencyId: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
@@ -51,7 +54,7 @@ export class Car {
     onDelete: 'SET NULL',
     nullable: true,
   })
-  @JoinColumn({ name: 'currentAgencyId' })
+  @JoinColumn({ name: 'agency_id' })
   agency: Agency;
 
   @DeleteDateColumn({ name: 'deleted_at' })
