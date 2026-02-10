@@ -1,27 +1,51 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
 
-// Lógica de Estado
 const authStore = useAuthStore();
 const router = useRouter();
 
 const drawer = ref(true);
 const rail = ref(false);
 
-// Iniciais do Usuário para o Avatar (Ex: Victor Fares -> VF)
 const userInitials = computed(() => {
   const name = authStore.user?.name || 'VF';
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
+  return name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase();
 });
 
-// Logout
+const menuItems = computed(() => {
+  const menus = [
+    { title: 'Início', icon: 'mdi-home', to: '/' },
+    { title: 'Nossa Frota', icon: 'mdi-car-search', to: '/frota' }, // Frota é pública
+  ];
+
+  if (authStore.isAuthenticated) {
+    if (authStore.isAdmin || authStore.isManager) {
+      menus.push(
+        { type: 'divider' },
+        { title: 'Gestão de Veículos', icon: 'mdi-car-cog', to: '/admin/cars' },
+        { title: 'Gestão de Agências', icon: 'mdi-domain', to: '/admin/agencies' }
+      );
+    } else {
+      menus.push(
+        { type: 'divider' },
+        { title: 'Meus Aluguéis', icon: 'mdi-history', to: '/meus-alugueis' }
+      );
+    }
+  } 
+  // VISITANTE (GUEST)
+  else {
+    menus.push(
+      { type: 'divider' },
+      { title: 'Entrar', icon: 'mdi-login', to: '/login' },
+      { title: 'Criar Conta', icon: 'mdi-account-plus', to: '/signup' }
+    );
+  }
+  
+  return menus;
+});
+
 function handleLogout() {
   authStore.logout();
   router.push('/login');
@@ -30,6 +54,7 @@ function handleLogout() {
 
 <template>
   <v-app style="font-family: 'Inter', sans-serif;">
+    
     <v-navigation-drawer 
       v-model="drawer" 
       :rail="rail" 
@@ -37,87 +62,91 @@ function handleLogout() {
       @click="rail = false"
       color="primary" 
       theme="dark"
+      elevation="2"
     >
       <v-list>
         <v-list-item nav>
           <template v-slot:prepend>
-             <v-icon icon="mdi-steering" size="32" color="secondary"></v-icon>
+             <v-icon icon="mdi-steering" size="32" color="secondary" class="mr-2"></v-icon>
           </template>
-          <v-list-item-title class="font-weight-bold text-h6">
+          <v-list-item-title class="font-weight-black text-h6 tracking-wide">
             FleetVF
           </v-list-item-title>
-          
           <template v-slot:append>
-            <v-btn
-              :icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'"
-              variant="text"
-              size="small"
-              @click.stop="rail = !rail"
-            ></v-btn>
+            <v-btn :icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'" variant="text" size="small" @click.stop="rail = !rail"></v-btn>
           </template>
         </v-list-item>
       </v-list>
 
-      <v-divider class="mb-2"></v-divider>
+      <v-divider class="mb-2 border-opacity-25"></v-divider>
 
       <v-list density="compact" nav>
-        <v-list-item prepend-icon="mdi-home" title="Home" to="/"></v-list-item>
-        
-        <template v-if="authStore.isAdmin || authStore.isManager">
-          <v-list-item prepend-icon="mdi-domain" title="Agências" to="/admin/agencies"></v-list-item>
-          <v-list-item prepend-icon="mdi-car" title="Veículos" to="/admin/cars"></v-list-item>
+        <template v-for="(item, i) in menuItems" :key="i">
+          <v-divider v-if="item.type === 'divider'" class="my-2 border-opacity-25"></v-divider>
+          <v-list-item 
+            v-else
+            :prepend-icon="item.icon" 
+            :title="item.title" 
+            :to="item.to"
+            color="secondary"
+            rounded="lg"
+            class="mb-1"
+          ></v-list-item>
         </template>
-
-        <v-list-item v-if="!authStore.isAdmin" prepend-icon="mdi-car-key" title="Meus Aluguéis" to="/rentals"></v-list-item>
-
-        <v-list-item prepend-icon="mdi-chart-box-outline" title="Dashboards" disabled></v-list-item>
       </v-list>
 
-      <template v-slot:append>
+      <template v-slot:append v-if="authStore.isAuthenticated">
         <div class="pa-2">
-          <v-btn block color="error" variant="tonal" v-if="!rail" @click="handleLogout">
-            Sair
-          </v-btn>
-          <v-btn icon="mdi-logout" color="error" variant="text" v-else @click="handleLogout"></v-btn>
+          <v-btn block color="error" variant="tonal" v-if="!rail" prepend-icon="mdi-logout" @click="handleLogout">Sair</v-btn>
+          <v-btn v-else icon="mdi-logout" color="error" variant="text" @click="handleLogout"></v-btn>
         </div>
       </template>
     </v-navigation-drawer>
 
-    <v-app-bar elevation="0" color="background" class="border-b">
+    <v-app-bar elevation="0" color="white" class="border-b">
       <v-app-bar-nav-icon v-if="!drawer" @click="drawer = !drawer"></v-app-bar-nav-icon>
       
-      <v-app-bar-title class="text-primary font-weight-bold">
-        Painel Administrativo
+      <v-app-bar-title class="text-grey-darken-3 font-weight-bold text-body-1">
+        {{ authStore.isAuthenticated ? (authStore.isAdmin ? 'Painel Administrativo' : 'Área do Cliente') : 'Bem-vindo' }}
       </v-app-bar-title>
       
       <template v-slot:append>
-        <v-btn icon="mdi-bell-outline" color="grey-darken-1"></v-btn>
-        
-        <v-menu>
+        <v-menu v-if="authStore.isAuthenticated" location="bottom end" transition="scale-transition">
           <template v-slot:activator="{ props }">
-            <v-avatar color="secondary" size="32" class="ml-4 mr-2 cursor-pointer" v-bind="props">
+            <v-avatar color="secondary" size="36" class="ml-4 mr-2 cursor-pointer elevation-1" v-bind="props">
               <span class="text-white font-weight-bold text-caption">{{ userInitials }}</span>
             </v-avatar>
           </template>
-          <v-list>
-            <v-list-item>
-              <v-list-item-title class="font-weight-bold">{{ authStore.user?.name }}</v-list-item-title>
-              <v-list-item-subtitle>{{ authStore.user?.email }}</v-list-item-subtitle>
-            </v-list-item>
-            <v-divider class="my-2"></v-divider>
-            <v-list-item prepend-icon="mdi-account" title="Meu Perfil" to="/profile" />
-            <v-list-item prepend-icon="mdi-logout" title="Sair" color="error" @click="handleLogout" />
-          </v-list>
+          <v-card min-width="200" rounded="lg" elevation="4">
+            <v-list>
+              <v-list-item>
+                <template v-slot:prepend>
+                  <v-avatar color="secondary" size="40"><span class="text-white text-h6">{{ userInitials }}</span></v-avatar>
+                </template>
+                <v-list-item-title class="font-weight-bold">{{ authStore.user?.name }}</v-list-item-title>
+                <v-list-item-subtitle class="text-caption">{{ authStore.user?.email }}</v-list-item-subtitle>
+              </v-list-item>
+            </v-list>
+            <v-divider></v-divider>
+            <v-list density="compact" nav>
+              <v-list-item prepend-icon="mdi-account-outline" title="Meu Perfil" to="/profile" />
+              <v-list-item prepend-icon="mdi-logout" title="Sair" color="error" @click="handleLogout" />
+            </v-list>
+          </v-card>
         </v-menu>
+
+        <div v-else class="d-flex align-center gap-2 mr-2">
+          <v-btn variant="text" to="/login" class="font-weight-bold text-black">Entrar</v-btn>
+          <v-btn color="black" variant="flat" to="/signup" class="font-weight-bold">Criar Conta</v-btn>
+        </div>
       </template>
     </v-app-bar>
 
-    <v-main class="bg-background">
-      <v-container fluid class="pa-6 fill-height align-start">
-        <slot></slot> </v-container>
+    <v-main class="bg-grey-lighten-5">
+      <slot></slot>
     </v-main>
 
-    <v-footer class="bg-white text-center d-flex flex-column py-6 border-t mt-auto">
+    <v-footer class="bg-white text-center d-flex flex-column py-4 border-t" app absolute>
       <div class="text-caption text-grey">
         &copy; {{ new Date().getFullYear() }} FleetVF. Desenvolvido por Victor Fares.
       </div>
@@ -126,7 +155,6 @@ function handleLogout() {
 </template>
 
 <style scoped>
-.cursor-pointer {
-  cursor: pointer;
-}
+.cursor-pointer { cursor: pointer; }
+.tracking-wide { letter-spacing: 0.05em; }
 </style>

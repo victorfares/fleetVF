@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 
@@ -12,34 +12,44 @@ const showPassword = ref(false);
 const errorMessage = ref('');
 
 const form = ref({
+  name: '',
   email: '',
   password: '',
+  confirmPassword: ''
 });
 
 const rules = {
   required: (v: string) => !!v || 'Campo obrigatório',
   email: (v: string) => /.+@.+\..+/.test(v) || 'E-mail inválido',
+  min: (v: string) => v.length >= 6 || 'Mínimo de 6 caracteres',
+  match: (v: string) => v === form.value.password || 'As senhas não coincidem'
 };
 
-async function handleLogin() {
+async function handleRegister() {
   if (!valid.value) return;
 
   loading.value = true;
   errorMessage.value = '';
 
   try {
-    await authStore.login(form.value);
-    router.push('/');
+    await authStore.register({
+      name: form.value.name,
+      email: form.value.email,
+      password: form.value.password
+    });
+    alert('Conta criada com sucesso! Faça login para continuar.');
+    router.push('/login');
+    
   } catch (error: any) {
-    console.error('Falha no login:', error);
-    errorMessage.value = 'E-mail ou senha incorretos. Tente novamente.';
+    console.error('Erro no cadastro:', error);
+    errorMessage.value = error.response?.data?.message || 'Erro ao criar conta. Tente novamente.';
   } finally {
     loading.value = false;
   }
 }
 
-function goToRegister() {
-  router.push('/signup');
+function goToLogin() {
+  router.push('/login');
 }
 </script>
 
@@ -50,9 +60,9 @@ function goToRegister() {
         
         <v-card class="rounded-xl pa-4 bg-white" elevation="10">
           <v-card-title class="text-center pt-6 pb-2">
-            <h2 class="text-h4 font-weight-black text-black">FleetVF</h2>
+            <h2 class="text-h4 font-weight-black text-black">Nova Conta</h2>
             <p class="text-body-2 text-grey-darken-2 mt-2 font-weight-medium">
-              Gestão inteligente para sua frota
+              Junte-se à FleetVF e gerencie sua frota
             </p>
           </v-card-title>
 
@@ -70,8 +80,22 @@ function goToRegister() {
               {{ errorMessage }}
             </v-alert>
 
-            <v-form v-model="valid" @submit.prevent="handleLogin">
+            <v-form v-model="valid" @submit.prevent="handleRegister">
               
+              <div class="text-subtitle-2 font-weight-black mb-1 ml-1 text-black">NOME COMPLETO</div>
+              <v-text-field
+                v-model="form.name"
+                :rules="[rules.required]"
+                placeholder="Ex: Victor Fares"
+                prepend-inner-icon="mdi-account-outline"
+                variant="outlined"
+                base-color="black"
+                color="primary"
+                bg-color="white"
+                density="comfortable"
+                class="mb-2 text-black font-weight-medium"
+              ></v-text-field>
+
               <div class="text-subtitle-2 font-weight-black mb-1 ml-1 text-black">E-MAIL</div>
               <v-text-field
                 v-model="form.email"
@@ -89,12 +113,27 @@ function goToRegister() {
               <div class="text-subtitle-2 font-weight-black mb-1 ml-1 text-black">SENHA</div>
               <v-text-field
                 v-model="form.password"
-                :rules="[rules.required]"
+                :rules="[rules.required, rules.min]"
                 :type="showPassword ? 'text' : 'password'"
-                placeholder="Sua senha"
+                placeholder="Crie uma senha forte"
                 prepend-inner-icon="mdi-lock-outline"
                 :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
                 @click:append-inner="showPassword = !showPassword"
+                variant="outlined"
+                base-color="black"
+                color="primary"
+                bg-color="white"
+                density="comfortable"
+                class="mb-2 text-black font-weight-medium"
+              ></v-text-field>
+
+              <div class="text-subtitle-2 font-weight-black mb-1 ml-1 text-black">CONFIRMAR SENHA</div>
+              <v-text-field
+                v-model="form.confirmPassword"
+                :rules="[rules.required, rules.match]"
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="Repita a senha"
+                prepend-inner-icon="mdi-lock-check-outline"
                 variant="outlined"
                 base-color="black"
                 color="primary"
@@ -114,17 +153,17 @@ function goToRegister() {
                 height="48"
                 rounded="lg"
               >
-                ENTRAR
+                CRIAR CONTA
               </v-btn>
             </v-form>
 
             <div class="text-center mt-6">
-              <span class="text-grey-darken-2 text-body-2 font-weight-medium">Não tem uma conta?</span>
+              <span class="text-grey-darken-2 text-body-2 font-weight-medium">Já possui cadastro?</span>
               <a 
                 class="text-primary font-weight-black ml-2 text-decoration-none cursor-pointer"
-                @click="goToRegister"
+                @click="goToLogin"
               >
-                Criar conta gratuita
+                Fazer Login
               </a>
             </div>
 

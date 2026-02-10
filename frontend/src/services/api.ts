@@ -8,12 +8,9 @@ const api = axios.create({
   },
 });
 
-// Interceptor de Requisição
 api.interceptors.request.use((config) => {
-  const authStore = useAuthStore(); 
+  const authStore = useAuthStore();
   const token = authStore.token;
-  // 👇 ADICIONE ISSO PARA DEBUGAR
-  console.log('🔐 Interceptor rodando. Token:', token);
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -21,18 +18,23 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Interceptor de Resposta
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.config && error.config.url.includes('/auth/login')) {
+      return Promise.reject(error);
+    }
+
     if (error.response && error.response.status === 401) {
       const authStore = useAuthStore();
       
-      console.warn('Sessão expirada. Deslogando via Pinia...');
+      console.warn('Sessão expirada. Deslogando...');
       authStore.logout();
       
+      // Usa window.location para garantir limpeza total de estado
       window.location.href = '/login';
     }
+    
     return Promise.reject(error);
   }
 );

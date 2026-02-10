@@ -15,7 +15,8 @@ export interface Car {
   currentMileage: number;
   status: CarStatus;
   imageUrl?: string;
-  agency?: Agency
+  agency?: Agency;
+  gencyId?: string;
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;

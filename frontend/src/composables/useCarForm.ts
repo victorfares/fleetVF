@@ -1,21 +1,22 @@
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, unref, type Ref } from 'vue';
 import api from '@/services/api';
 import { CarStatus } from '@/types/Car';
 import type { Car } from '@/types/Car';
 import type { Agency } from '@/types/Agency';
 
-interface UseCarFormProps {
-  carToEdit?: Car | null;
+interface UseCarFormOptions {
+  carRef: Ref<Car | null | undefined>; 
   onSaved: () => void;
+  onError?: (msg: string) => void;
 }
 
-export function useCarForm(props: UseCarFormProps) {
+export function useCarForm(options: UseCarFormOptions) {
   const formRef = ref<any>(null);
   const saving = ref(false);
   const loadingAgencies = ref(false);
   const agencies = ref<Agency[]>([]);
   
-  const isEditing = computed(() => !!props.carToEdit);
+  const isEditing = computed(() => !!options.carRef.value?.id);
 
   const formData = reactive({
     brand: '',
@@ -28,28 +29,29 @@ export function useCarForm(props: UseCarFormProps) {
     imageUrl: ''
   });
 
-  // Regras de Validação
   const rules = {
     required: (v: any) => !!v || 'Campo obrigatório',
     positive: (v: number) => v > 0 || 'Valor deve ser positivo',
-    // Validação da KM anterior vs Nova KM
     minCurrentKm: (v: number) => {
-      if (!isEditing.value || !props.carToEdit) return true;
-      return v >= props.carToEdit.currentMileage || `A KM não pode ser menor que a atual (${props.carToEdit.currentMileage} km)`;
+      // Usa options.carRef.value para pegar o carro atual
+      const currentCar = options.carRef.value;
+      if (!isEditing.value || !currentCar) return true;
+      return v >= currentCar.currentMileage || `A KM não pode ser menor que a atual (${currentCar.currentMileage} km)`;
     }
   };
 
   const statusOptions = [
-    { label: 'Disponível', value: CarStatus.AVAILABLE },
-    { label: 'Alugado', value: CarStatus.RENTED },
-    { label: 'Em Manutenção', value: CarStatus.MAINTENANCE },
+    { title: 'Disponível', value: CarStatus.AVAILABLE },
+    { title: 'Alugado', value: CarStatus.RENTED },
+    { title: 'Em Manutenção', value: CarStatus.MAINTENANCE },
   ];
 
   const fetchAgencies = async () => {
     loadingAgencies.value = true;
     try {
-      const response = await api.get('/agencies', { params: { limit: 100 } });
-      agencies.value = response.data.data.data;
+      const response = await api.get('/agencies'); 
+      const data = response.data.data ? response.data.data : response.data;
+      agencies.value = Array.isArray(data) ? data : data.data || [];
     } catch (error) {
       console.error('Falha ao carregar agências', error);
     } finally {
@@ -58,15 +60,27 @@ export function useCarForm(props: UseCarFormProps) {
   };
 
   const initForm = () => {
-    if (props.carToEdit) {
-      formData.brand = props.carToEdit.brand;
-      formData.model = props.carToEdit.model;
-      formData.licensePlate = props.carToEdit.licensePlate;
-      formData.dailyRate = Number(props.carToEdit.dailyRate);
-      formData.currentMileage = Number(props.carToEdit.currentMileage);
-      formData.status = props.carToEdit.status;
-      formData.imageUrl = props.carToEdit.imageUrl || '';
-      formData.agencyId = props.carToEdit.agency?.id || null;
+    const car = options.carRef.value;
+
+    if (car) {
+      formData.brand = car.brand;
+      formData.model = car.model;
+      formData.licensePlate = car.licensePlate;
+      formData.dailyRate = Number(car.dailyRate);
+      formData.currentMileage = Number(car.currentMileage);
+      formData.status = car.status;
+      formData.imageUrl = car.imageUrl || '';
+      formData.agencyId = car.agency?.id || car.agencyId || null;
+    } else {
+      // MODO CRIAÇÃO (Reset)
+      formData.brand = '';
+      formData.model = '';
+      formData.licensePlate = '';
+      formData.dailyRate = 0;
+      formData.currentMileage = 0;
+      formData.agencyId = null;
+      formData.status = CarStatus.AVAILABLE;
+      formData.imageUrl = '';
     }
   };
 
@@ -76,34 +90,34 @@ export function useCarForm(props: UseCarFormProps) {
 
     saving.value = true;
     try {
-      if (isEditing.value && props.carToEdit) {
-        const patchPayload = {
-          dailyRate: Number(formData.dailyRate),
-          currentMileage: Number(formData.currentMileage),
-          imageUrl: formData.imageUrl,
-          status: formData.status
-        };
+      const basePayload = {
+        brand: formData.brand,
+        model: formData.model,
+        dailyRate: Number(formData.dailyRate),
+        currentMileage: Number(formData.currentMileage),
+        agencyId: formData.agencyId,
+        status: formData.status,
+        imageUrl: formData.imageUrl
+      };
 
-        await api.patch(`/cars/${props.carToEdit.id}`, patchPayload);
-      
+      const car = options.carRef.value;
+
+      if (isEditing.value && car) {
+        await api.patch(`/cars/${car.id}`, basePayload);
       } else {
         const postPayload = {
-          ...formData,
-          dailyRate: Number(formData.dailyRate),
-          currentMileage: Number(formData.currentMileage)
+          ...basePayload,
+          licensePlate: formData.licensePlate.toUpperCase()
         };
-        
         await api.post('/cars', postPayload);
       }
       
-      props.onSaved();
+      options.onSaved();
     } catch (error: any) {
       console.error('Erro ao salvar:', error);
-      const message = error.response?.data?.message;
-      if (Array.isArray(message)) {
-        alert(`Erro de Validação:\n- ${message.join('\n- ')}`);
-      } else {
-        alert(`Erro: ${message || 'Falha ao processar requisição.'}`);
+      const msg = error.response?.data?.message || 'Erro ao salvar veículo.';
+      if (options.onError) {
+        options.onError(Array.isArray(msg) ? msg.join(', ') : msg);
       }
     } finally {
       saving.value = false;
@@ -112,7 +126,6 @@ export function useCarForm(props: UseCarFormProps) {
 
   onMounted(() => {
     fetchAgencies();
-    initForm();
   });
 
   return {
@@ -124,6 +137,7 @@ export function useCarForm(props: UseCarFormProps) {
     agencies,
     loadingAgencies,
     statusOptions,
+    initForm,
     save
   };
 }
