@@ -11,6 +11,7 @@ import { AllExceptionsFilter } from '../common/filters/http-exception.filter';
 import { AuthModule } from 'src/auth/auth.module';
 import { UsersModule } from 'src/modules/users/users.module';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -50,6 +51,10 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
   ],
 })

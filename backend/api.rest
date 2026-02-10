@@ -404,7 +404,7 @@ GET {{baseUrl}}/users
 # OBJETIVO: Testar se a Strategy valida o token corretamente.
 # Copie o token do passo 1 e cole abaixo depois de "Bearer"
 GET {{baseUrl}}/users
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjZWNlMmUyZi1iOTVlLTQzY2QtOTY5Ni04ZDYzYTliNTgwYzQiLCJlbWFpbCI6ImFkbWluQGZsZWV0dmYuY29tIiwicm9sZSI6IkFETUlOIiwibmFtZSI6IlZpY3RvciBBZG1pbiIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMCIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMCIsImlhdCI6MTc3MDY2OTUxMywiZXhwIjoxNzcwNjczMTEzfQ.vdpVAQymig9jX7yLtoqmrHbMoQrJIYAtQLAsrdYXBWc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjZWNlMmUyZi1iOTVlLTQzY2QtOTY5Ni04ZDYzYTliNTgwYzQiLCJlbWFpbCI6ImFkbWluQGZsZWV0dmYuY29tIiwicm9sZSI6IkFETUlOIiwibmFtZSI6IlZpY3RvciBBZG1pbiIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMCIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMCIsImlhdCI6MTc3MDc0NDMwMiwiZXhwIjoxNzcwNzQ3OTAyfQ.yGDBpoZ0CHiLfR_2ISulnVh_Oe_C9aw3hF7KjJSQgIs
 
 # ==========================================
 # 🕵️‍♂️ 4. TESTE DE PERFIL (CURRENT USER)
@@ -413,3 +413,45 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjZWNlMmUyZ
 ### 4. Ver dados do usuário logado (Se você criou a rota /me)
 GET {{baseUrl}}/users/me
 Authorization: Bearer COLA_SEU_TOKEN_GIGANTE_AQUI
+
+
+# ==========================================
+# 🎭 CENÁRIO DE TESTE DE ROLES (RBAC)
+# ==========================================
+
+### 1. [ADMIN] Criar um Usuário "Cliente" (Para testar o bloqueio)
+# Use o token do Admin aqui (que já tem permissão)
+POST {{baseUrl}}/users
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjZWNlMmUyZi1iOTVlLTQzY2QtOTY5Ni04ZDYzYTliNTgwYzQiLCJlbWFpbCI6ImFkbWluQGZsZWV0dmYuY29tIiwicm9sZSI6IkFETUlOIiwibmFtZSI6IlZpY3RvciBBZG1pbiIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMCIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMCIsImlhdCI6MTc3MDc0NTg2MywiZXhwIjoxNzcwNzQ5NDYzfQ.ZVCd_ixvhFFF03nTGvOu6R0XLoJTAcK85VGR_bT1Dco
+
+{
+    "name": "João Cliente",
+    "email": "client@fleetvf.com",
+    "password": "ClientPassword123!",
+    "role": "CLIENT" 
+}
+
+### 2. [CLIENT] Fazer Login como Cliente
+# @name clientLogin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+    "email": "client@fleetvf.com",
+    "password": "ClientPassword123!"
+}
+
+### 3. [CLIENT] Tentar Criar um Usuário (Deve FALHAR)
+# O Cliente vai tentar fazer algo que só Admin pode.
+# ESPERADO: 403 Forbidden
+POST {{baseUrl}}/users
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MTU3Nzk1Yy1lMmQ0LTQwZTQtYjc0Mi0xMTNkMmUxYjE0YjciLCJlbWFpbCI6ImNsaWVudEBmbGVldHZmLmNvbSIsInJvbGUiOiJDTElFTlQiLCJuYW1lIjoiSm_Do28gQ2xpZW50ZSIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMCIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMCIsImlhdCI6MTc3MDc0NTg5NCwiZXhwIjoxNzcwNzQ5NDk0fQ.itTZ-peVK871mO1Nzg8QZn_QxoZ3N3kipzaqbixqld4
+
+{
+    "name": "Hacker Tentando Entrar",
+    "email": "hacker@fleetvf.com",
+    "password": "123",
+    "role": "ADMIN"
+}
