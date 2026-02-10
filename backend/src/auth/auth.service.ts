@@ -1,10 +1,12 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { LoginDto } from './hashing/dto/login.dto';
 import jwtConfig from './config/jwt.config';
 import type { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/modules/users/users.service';
 import { HashingServiceProtocol } from './hashing/hashing.service';
+import { UserRole } from 'src/modules/users/enums/user-role.enum';
+import { SignupDto } from './dto/sign-up.dto';
 
 @Injectable()
 export class AuthService {
@@ -54,5 +56,18 @@ export class AuthService {
         role: user.role,
       },
     };
+  }
+
+  async signup(signupDto: SignupDto) {
+    const userExists = await this.usersService.findByEmail(signupDto.email);
+    if (userExists) {
+      throw new BadRequestException('Email já cadastrado.');
+    }
+    const newUser = await this.usersService.create({
+      ...signupDto,
+      role: UserRole.CLIENT,
+    });
+
+    return newUser;
   }
 }

@@ -56,8 +56,14 @@ export class UsersService {
     return await this.userRepository
       .createQueryBuilder('user')
       .where('user.email = :email', { email })
-      .addSelect('user.password') // Traz a senha oculta para comparar
+      .addSelect('user.password')
       .getOne();
+  }
+
+  async findByEmail(email: string) {
+    return this.userRepository.findOne({
+      where: { email },
+    });
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {

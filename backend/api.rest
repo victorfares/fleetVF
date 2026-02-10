@@ -455,3 +455,71 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MTU3Nzk1Y
     "password": "123",
     "role": "ADMIN"
 }
+
+Excelente! O fluxo de Sign Up (Auto-cadastro) é um dos mais críticos para testar, pois precisamos garantir que a "porta de entrada" funciona, mas que ninguém entra com privilégios de administrador indevidamente.
+
+Vamos testar 3 cenários no seu api.rest.
+
+📄 Atualize seu api.rest
+Adicione estes blocos no final do arquivo. Eles testam o ciclo completo: Cadastro -> Tentativa de Fraude -> Login com a conta nova.
+
+HTTP
+
+# ==========================================
+# 🆕 CENÁRIO: AUTO-CADASTRO (SIGN UP)
+# ==========================================
+
+### 1. Criar Conta (Sucesso)
+# O usuário comum se cadastra.
+# ESPERADO: 201 Created + Objeto do usuário (role deve ser CLIENT)
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+    "name": "Cliente Novo da Silva",
+    "email": "cliente.novo@gmail.com",
+    "password": "SenhaForte123!"
+}
+
+### 2. Tentativa de Hacker (Injeção de Role)
+# Tenta criar um usuário forçando ser ADMIN.
+# COMO VALIDAR:
+# Opção A: Se o DTO estiver com 'forbidNonWhitelisted: true', dá erro 400 (Melhor caso).
+# Opção B: Se aceitar, a resposta DEVE voltar com "role": "CLIENT" (O service ignorou o admin).
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+    "name": "Hacker Esperto",
+    "email": "hacker.novo@gmail.com",
+    "password": "SenhaForte123!",
+    "role": "ADMIN"
+}
+
+### 3. Testar Login com a Nova Conta
+# Verifica se o usuário criado no passo 1 consegue pegar token.
+# ESPERADO: 200 OK + Token JWT
+# @name novoLogin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+    "email": "cliente.novo@gmail.com",
+    "password": "SenhaForte123!"
+}
+
+### 4. Verificar Permissões (Acesso Negado)
+# Tenta criar um carro usando o token do novo cliente.
+# ESPERADO: 403 Forbidden (O sistema reconheceu que ele é CLIENT)
+POST {{baseUrl}}/cars
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjODk0MmYwYi1iODMyLTQwYmMtODYxNS1mODY2ZGE2NjZhZjYiLCJlbWFpbCI6ImNsaWVudGUubm92b0BnbWFpbC5jb20iLCJyb2xlIjoiQ0xJRU5UIiwibmFtZSI6IkNsaWVudGUgTm92byBkYSBTaWx2YSIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMCIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMCIsImlhdCI6MTc3MDc0Njk1NSwiZXhwIjoxNzcwNzUwNTU1fQ.681TAGAAnIxb2McT9R2RnRiswjwPM07Pjy2sdwD4z54
+
+{
+    "brand": "Ferrari",
+    "model": "F8",
+    "year": 2024,
+    "licensePlate": "NOV-1234",
+    "color": "Red",
+    "dailyRate": 5000
+}
