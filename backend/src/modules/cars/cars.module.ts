@@ -9,5 +9,6 @@ import { AgenciesModule } from '../agencies/agencies.module';
   imports: [TypeOrmModule.forFeature([Car]), AgenciesModule],
   controllers: [CarsController],
   providers: [CarsService],
+  exports: [CarsService],
 })
 export class CarsModule {}

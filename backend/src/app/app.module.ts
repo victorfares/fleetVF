@@ -12,6 +12,7 @@ import { AuthModule } from 'src/auth/auth.module';
 import { UsersModule } from 'src/modules/users/users.module';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { RentalsModule } from 'src/modules/rentals/rentals.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -36,6 +37,7 @@ import { RolesGuard } from 'src/auth/guards/roles.guard';
     CarsModule,
     AuthModule,
     UsersModule,
+    RentalsModule,
   ],
   controllers: [AppController],
   providers: [
