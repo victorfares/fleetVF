@@ -1,170 +1,209 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
+import { useCars } from '@/composables/useCars'
+import CarCard from '@/components/CarCard.vue';
+
+const router = useRouter();
+const authStore = useAuthStore();
+
+const { 
+  cars, 
+  loading, 
+  fetchCars, 
+  itemsPerPage 
+} = useCars();
+
+// Estado da busca rápida
+const searchTerm = ref('');
+
+// Ação de Buscar (Redireciona para a Frota com filtro)
+function handleSearch() {
+  if (searchTerm.value && searchTerm.value.trim() !== '') {
+    router.push({ path: '/frota', query: { search: searchTerm.value } });
+  } else {
+    router.push('/frota');
+  }
+}
+
+function goToFleet() {
+  router.push('/frota');
+}
+
+// Inicialização
+onMounted(() => {
+  // Configura para buscar apenas 3 carros para a vitrine
+  itemsPerPage.value = 3; 
+  fetchCars();
+});
+
+const benefits = [
+  { title: 'Transparência Total', desc: 'Sem taxas ocultas. Valor final garantido.', icon: 'mdi-cash-check' },
+  { title: 'Suporte 24/7', desc: 'Equipe pronta para ajudar a qualquer hora.', icon: 'mdi-face-agent' },
+  { title: 'Frota Premium', desc: 'Carros revisados e higienizados.', icon: 'mdi-sparkles' }
+];
+</script>
+
 <template>
   <v-container fluid class="pa-0">
     
-    <v-container class="pt-10 pt-md-16 pb-16">
-      <v-row align="center" justify="center">
-        <v-col cols="12" md="7" class="text-center text-md-left">
-          <v-chip color="secondary" variant="tonal" size="small" class="mb-6 font-weight-bold">
-            V 2.0 AGORA DISPONÍVEL
-          </v-chip>
+    <v-sheet color="white" class="position-relative overflow-hidden pb-16 pt-10">
+      <div class="position-absolute top-0 right-0 h-100 w-50 bg-blue-lighten-5 rounded-s-xl d-none d-md-block" style="opacity: 0.5;"></div>
+
+      <v-container class="position-relative">
+        <v-row align="center" justify="center">
           
-          <h1 class="text-h3 text-md-h2 font-weight-bold text-primary mb-6" style="line-height: 1.2;">
-            Controle total da sua <br>
-            <span class="text-secondary">frota corporativa</span>
-          </h1>
-          
-          <p class="text-h6 text-grey-darken-1 mb-8 font-weight-regular" style="max-width: 600px; margin: 0 auto 0 0;">
-            A solução completa para o gerenciamento inteligente de veículos e agências. Otimize custos, monitore ativos e escale sua operação com o <strong>FleetVF</strong>.
-          </p>
-          
-          <div class="d-flex flex-column flex-sm-row gap-4 justify-center justify-md-start">
-            <v-btn color="secondary" size="x-large" elevation="4" to="/agencias" class="px-8 text-white">
-              Começar Agora
-              <v-icon end icon="mdi-arrow-right" class="ml-2"></v-icon>
-            </v-btn>
+          <v-col cols="12" md="6" lg="5" class="text-center text-md-left z-index-1">
+            <v-chip color="secondary" variant="flat" size="small" class="mb-6 font-weight-bold text-uppercase">
+              Ofertas de Verão - Até 30% OFF
+            </v-chip>
             
-            <v-btn variant="outlined" color="primary" size="x-large" class="px-8 mt-3 mt-sm-0" href="https://github.com/victorfares" target="_blank">
-              Ver Repositório
-            </v-btn>
-          </div>
-
-          <div class="mt-10 d-flex align-center justify-center justify-md-start text-grey">
-            <v-icon icon="mdi-check-circle-outline" size="small" class="mr-1"></v-icon>
-            <span class="text-body-2 mr-4">Open Source</span>
-            <v-icon icon="mdi-check-circle-outline" size="small" class="mr-1"></v-icon>
-            <span class="text-body-2">Vue 3 Powered</span>
-          </div>
-        </v-col>
-
-        <v-col cols="12" md="5" class="d-none d-md-flex justify-center position-relative">
-           <v-sheet 
-              color="secondary" 
-              class="rounded-xl position-absolute" 
-              height="300" width="300" 
-              style="opacity: 0.1; top: -20px; right: 20px; transform: rotate(12deg);"
-           ></v-sheet>
-           
-           <v-card width="400" elevation="10" class="position-relative bg-white border-0 rounded-xl overflow-hidden">
-              <v-img 
-                 src="https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=1000&auto=format&fit=crop"
-                 height="200" cover class="align-end"
-                 gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
+            <h1 class="text-h3 text-lg-h2 font-weight-black text-primary mb-4" style="line-height: 1.1;">
+              Explore o mundo <br>
+              <span class="text-secondary">no seu ritmo</span>
+            </h1>
+            
+            <p class="text-h6 text-grey-darken-1 mb-8 font-weight-regular lh-sm">
+              Do compacto econômico ao SUV de luxo. Liberdade e segurança para sua família.
+            </p>
+            
+            <div class="d-flex flex-column flex-sm-row gap-4 justify-center justify-md-start align-center ga-4">
+              <v-btn 
+                to="/frota" 
+                color="primary" 
+                size="x-large" 
+                elevation="6" 
+                rounded="xl" 
+                class="px-8 font-weight-bold"
               >
-                 <v-card-title class="text-white">Dashboard Agência 01</v-card-title>
-              </v-img>
-              <v-list lines="one">
-                 <v-list-item prepend-icon="mdi-car" title="Sedan Executivo" subtitle="Disponível">
-                    <template v-slot:append><v-badge color="success" dot inline></v-badge></template>
-                 </v-list-item>
-                 <v-divider inset></v-divider>
-                 <v-list-item prepend-icon="mdi-truck" title="Utilitário Leve" subtitle="Em Manutenção">
-                    <template v-slot:append><v-badge color="warning" dot inline></v-badge></template>
-                 </v-list-item>
-              </v-list>
-           </v-card>
-        </v-col>
-      </v-row>
-    </v-container>
-
-    <v-sheet color="white" class="py-16">
-      <v-container>
-        <v-row class="mb-10">
-          <v-col cols="12" class="text-center">
-            <p class="text-overline text-secondary font-weight-bold mb-2">RECURSOS</p>
-            <h2 class="text-h4 font-weight-bold text-primary">Tudo o que sua operação precisa</h2>
+                Ver Carros
+                <v-icon end icon="mdi-car-side" class="ml-2"></v-icon>
+              </v-btn>
+              
+              <div class="d-flex align-center text-grey-darken-2">
+                <v-icon icon="mdi-phone-in-talk" color="secondary" class="mr-2"></v-icon>
+                <span class="font-weight-medium">0800 123 4567</span>
+              </div>
+            </div>
+            
+            <div class="mt-10 d-flex align-center justify-center justify-md-start text-grey-darken-1 ga-6">
+              <div class="d-flex align-center"><v-icon icon="mdi-shield-check" color="success" class="mr-2"></v-icon><span class="text-body-2 font-weight-medium">Seguro Incluso</span></div>
+              <div class="d-flex align-center"><v-icon icon="mdi-map-marker-check" color="success" class="mr-2"></v-icon><span class="text-body-2 font-weight-medium">KM Livre</span></div>
+            </div>
           </v-col>
-        </v-row>
 
-        <v-row>
-          <v-col v-for="(feature, i) in features" :key="i" cols="12" md="4">
-            <v-hover v-slot="{ isHovering, props }">
-              <v-card 
-                v-bind="props"
-                class="h-100 pt-4 pb-2 transition-swing"
-                :elevation="isHovering ? 8 : 0"
-                :style="isHovering ? 'border-color: transparent' : ''"
-              >
-                <v-card-item>
-                  <div class="d-flex justify-space-between align-start mb-4">
-                    <v-sheet :color="feature.color" height="50" width="50" class="rounded-lg d-flex align-center justify-center bg-opacity-10">
-                      <v-icon :icon="feature.icon" :color="feature.color" size="28"></v-icon>
-                    </v-sheet>
-                    <v-chip v-if="feature.tag" size="small" color="grey" variant="flat">{{ feature.tag }}</v-chip>
-                    <v-chip v-else size="small" color="green-lighten-4" class="text-green-darken-3 font-weight-bold" variant="flat">Ativo</v-chip>
-                  </div>
-                  <v-card-title class="text-h6 font-weight-bold text-primary px-0">{{ feature.title }}</v-card-title>
-                </v-card-item>
+          <v-col cols="12" md="6" lg="6" offset-lg="1" class="position-relative mt-10 mt-md-0">
+              <v-sheet color="secondary" class="rounded-circle position-absolute d-none d-md-block" height="200" width="200" style="opacity: 0.1; bottom: -40px; left: -40px;"></v-sheet>
 
-                <v-card-text class="text-body-1 text-grey-darken-1">{{ feature.description }}</v-card-text>
+              <v-card elevation="16" rounded="xl" class="border-0 overflow-hidden bg-white">
+                <v-img src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=1000&auto=format&fit=crop" height="200" cover gradient="to bottom, rgba(0,0,0,0), rgba(0,0,0,0.6)" class="align-end">
+                  <v-card-title class="text-white text-h5 font-weight-bold px-6 pb-4">Encontre seu carro ideal</v-card-title>
+                </v-img>
 
-                <v-card-actions class="px-4">
-                  <v-btn 
-                    v-if="feature.active" 
-                    variant="text" color="secondary" :to="feature.route" class="px-0"
-                  >
-                    Acessar Painel <v-icon end icon="mdi-arrow-right" size="small"></v-icon>
+                <v-card-text class="pt-8 px-6">
+                  <v-text-field
+                    v-model="searchTerm"
+                    label="Buscar por marca ou modelo (ex: Toyota)"
+                    prepend-inner-icon="mdi-car-search"
+                    variant="outlined"
+                    density="comfortable"
+                    color="primary"
+                    hide-details="auto"
+                    class="mb-2"
+                    @keyup.enter="handleSearch"
+                  ></v-text-field>
+                </v-card-text>
+
+                <v-card-actions class="px-6 pb-6 pt-0">
+                  <v-btn block color="secondary" variant="flat" size="large" class="font-weight-bold rounded-lg text-white" @click="handleSearch">
+                    Buscar Veículos
                   </v-btn>
-                  <v-btn v-else disabled variant="text" class="px-0">Em Desenvolvimento</v-btn>
                 </v-card-actions>
               </v-card>
-            </v-hover>
           </v-col>
         </v-row>
       </v-container>
     </v-sheet>
 
     <v-container class="py-16">
-      <v-card color="primary" theme="dark" class="rounded-xl overflow-hidden px-md-10 py-10">
-        <v-row align="center">
-          <v-col cols="12" md="8" class="text-center text-md-left">
-            <h3 class="text-h4 font-weight-bold mb-2">Pronto para otimizar sua frota?</h3>
-            <p class="text-grey-lighten-3 text-body-1">Gerencie agências e veículos em uma única plataforma centralizada.</p>
-          </v-col>
-          <v-col cols="12" md="4" class="text-center text-md-right">
-            <v-btn color="white" class="text-primary font-weight-bold" size="large" to="/agencias">
-              Iniciar Agora
-            </v-btn>
+      <v-row class="mb-8">
+        <v-col cols="12" class="text-center">
+          <p class="text-overline text-secondary font-weight-bold mb-2">NOSSA FROTA</p>
+          <h2 class="text-h4 font-weight-bold text-primary">Destaques Recentes</h2>
+        </v-col>
+      </v-row>
+
+      <v-row v-if="loading">
+        <v-col v-for="n in 3" :key="n" cols="12" sm="6" md="4">
+          <v-skeleton-loader type="image, article" class="rounded-lg border"></v-skeleton-loader>
+        </v-col>
+      </v-row>
+
+      <v-row v-else-if="!cars.length" justify="center">
+        <v-col cols="12" class="text-center">
+          <p class="text-grey">Nenhum veículo disponível no momento.</p>
+          <v-btn variant="text" color="primary" to="/frota">Ver todos</v-btn>
+        </v-col>
+      </v-row>
+
+      <v-row v-else>
+        <v-col v-for="car in cars" :key="car.id" cols="12" sm="6" md="4">
+          <CarCard 
+            :car="car" 
+            @reserve="goToFleet"
+            @edit="goToFleet"
+          />
+        </v-col>
+      </v-row>
+
+      <v-row class="mt-8">
+        <v-col class="text-center">
+          <v-btn to="/frota" variant="outlined" color="primary" rounded="xl" size="large" class="px-8 font-weight-bold">
+            Ver Frota Completa
+          </v-btn>
+        </v-col>
+      </v-row>
+    </v-container>
+
+    <v-sheet color="blue-lighten-5" class="py-16 text-center">
+      <v-container>
+        <v-row justify="center" class="mb-10">
+          <v-col cols="12" md="8">
+            <h3 class="text-h4 font-weight-bold mb-4 text-primary">Por que alugar com a FleetVF?</h3>
+            <p class="text-h6 font-weight-regular text-grey-darken-2">Simplificamos o processo para você.</p>
           </v-col>
         </v-row>
+        <v-row justify="center" class="text-center">
+          <v-col v-for="(benefit, i) in benefits" :key="i" cols="12" sm="6" md="4">
+            <v-card color="primary" theme="dark" class="py-8 px-4 h-100 rounded-xl" elevation="6">
+              <v-avatar color="white" size="80" class="mb-6" variant="flat"><v-icon :icon="benefit.icon" color="primary" size="40"></v-icon></v-avatar>
+              <h4 class="text-h6 font-weight-bold mb-3">{{ benefit.title }}</h4>
+              <p class="text-body-2 px-4 opacity-90">{{ benefit.desc }}</p>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-sheet>
+
+    <v-container class="py-16">
+      <v-card theme="dark" class="bg-grey-darken-4 rounded-xl overflow-hidden">
+        <v-img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2000&auto=format&fit=crop" height="350" cover gradient="to right, rgba(0,0,0,0.9), rgba(0,0,0,0.3)">
+          <v-row class="h-100 pa-8 pa-md-16" align="center">
+            <v-col cols="12" md="6">
+              <h3 class="text-h4 font-weight-bold mb-4">{{ authStore.isAuthenticated ? 'Pronto para a próxima viagem?' : 'Comece sua jornada agora' }}</h3>
+              <p class="text-body-1 text-grey-lighten-1 mb-8">
+                {{ authStore.isAuthenticated ? 'Confira nossa frota atualizada e garanta o melhor preço.' : 'Cadastre-se gratuitamente e tenha acesso a descontos exclusivos.' }}
+              </p>
+              <div class="d-flex ga-4 flex-wrap">
+                <v-btn v-if="!authStore.isAuthenticated" prepend-icon="mdi-account-plus" color="white" variant="flat" size="large" class="px-6 text-black font-weight-bold" to="/signup">Criar Conta</v-btn>
+                <v-btn v-else prepend-icon="mdi-car-search" color="white" variant="flat" size="large" class="px-6 text-black font-weight-bold" to="/frota">Reservar Agora</v-btn>
+              </div>
+            </v-col>
+          </v-row>
+        </v-img>
       </v-card>
     </v-container>
 
   </v-container>
 </template>
-
-<script setup lang="ts">
-const features = [
-  {
-    title: 'Gestão de Agências',
-    description: 'Controle centralizado de filiais. Gerencie endereços, capacidade de pátio e alocação de recursos por unidade geográfica.',
-    icon: 'mdi-office-building-marker',
-    color: 'blue-darken-2',
-    route: '/agencias',
-    active: true
-  },
-  {
-    title: 'Controle de Frota',
-    description: 'Rastreamento completo do ciclo de vida do veículo. Da aquisição à manutenção e desativação.',
-    icon: 'mdi-car-connected',
-    color: 'teal-darken-1',
-    route: '/frota',
-    active: false,
-    tag: 'Em Breve'
-  },
-  {
-    title: 'Analytics & Dashboards',
-    description: 'Inteligência de dados para tomada de decisão. Métricas de faturamento, ociosidade e ROI por veículo.',
-    icon: 'mdi-chart-box-outline',
-    color: 'indigo-accent-2',
-    route: '/dashboards',
-    active: false,
-    tag: 'Em Breve'
-  }
-];
-</script>
-
-<style scoped>
-.transition-swing {
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
-}
-</style>
