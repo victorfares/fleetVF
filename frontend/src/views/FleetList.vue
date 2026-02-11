@@ -8,7 +8,6 @@ import type { Car } from '@/types/Car';
 import CarCard from '@/components/CarCard.vue';
 import CarFormDialog from '@/components/CarFormDialog.vue'; 
 
-// 1. Injeção de Dependências
 const route = useRoute();
 const authStore = useAuthStore();
 const { 
@@ -19,21 +18,19 @@ const {
   itemsPerPage, 
   totalItems, 
   search, 
+  agencyIdFilter,
   fetchCars 
 } = useCars();
 
-// 2. Estado Local
 const isDialogOpen = ref(false);
 const carToEdit = ref<Car | null>(null);
 let searchTimeout: ReturnType<typeof setTimeout>;
 
 itemsPerPage.value = 10;
 
-// 3. Computados
 const pageCount = computed(() => Math.ceil(totalItems.value / itemsPerPage.value));
 const hasCars = computed(() => Array.isArray(cars.value) && cars.value.length > 0);
 
-// 4. Ações
 const handleEditCar = (car: Car) => {
   if (authStore.isAdmin || authStore.isManager) {
     carToEdit.value = car;
@@ -50,7 +47,6 @@ const onCarSaved = () => {
   isDialogOpen.value = false;
 };
 
-// 5. Watchers
 watch(page, () => {
   fetchCars();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -64,11 +60,19 @@ watch(search, (newVal) => {
   }, 500);
 });
 
-// 6. Inicialização
 onMounted(() => {
+  // 1. Verifica Busca de Texto
   if (route.query.search) {
     search.value = String(route.query.search);
   }
+
+  // 2. Verifica Filtro de Agência
+  if (route.query.agencyId) {
+    agencyIdFilter.value = String(route.query.agencyId);
+  } else {
+    agencyIdFilter.value = null;
+  }
+  
   fetchCars();
 });
 </script>
@@ -82,10 +86,10 @@ onMounted(() => {
         <div class="d-flex align-center justify-space-between w-100">
           <div class="d-flex flex-column">
             <h1 class="text-h5 font-weight-black text-grey-darken-4 lh-1">
-              Nossa Frota
+              {{ agencyIdFilter ? 'Frota da Agência' : 'Nossa Frota' }}
             </h1>
             <span class="text-body-2 text-grey mt-1">
-              Escolha o veículo ideal para sua viagem
+              {{ agencyIdFilter ? 'Veículos disponíveis nesta unidade' : 'Escolha o veículo ideal para sua viagem' }}
             </span>
           </div>
 
@@ -120,6 +124,13 @@ onMounted(() => {
             </template>
           </v-text-field>
         </div>
+
+        <div v-if="agencyIdFilter" class="mt-2">
+           <v-chip closable color="primary" label @click:close="agencyIdFilter = null; fetchCars();">
+             Filtrando por Agência
+           </v-chip>
+        </div>
+
       </div>
     </v-toolbar>
 
@@ -143,7 +154,7 @@ onMounted(() => {
             <v-icon icon="mdi-car-off" size="48" color="grey"></v-icon>
           </div>
           <h3 class="text-h6 text-grey-darken-2 font-weight-bold">Nenhum veículo encontrado</h3>
-          <p class="text-body-2 text-grey">Sua busca não retornou resultados.</p>
+          <p class="text-body-2 text-grey">Tente ajustar seus filtros.</p>
         </v-col>
       </v-row>
 
@@ -192,13 +203,8 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.lh-1 {
-  line-height: 1;
-}
-.h-100 {
-  height: 100% !important;
-}
-
+.lh-1 { line-height: 1; }
+.h-100 { height: 100% !important; }
 @media (min-width: 1920px) {
   .v-col-xl-custom-5 {
     flex: 0 0 20%;

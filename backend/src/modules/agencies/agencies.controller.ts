@@ -15,6 +15,7 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Roles } from 'src/common/decorators/roles.decorator';  
 import { UserRole } from '../users/enums/user-role.enum';
+import { IsPublic } from 'src/common/decorators/is-public.decorator';
 
 @Controller('agencies')
 @ApiBearerAuth('access-token')
@@ -27,6 +28,7 @@ export class AgenciesController {
     return this.agenciesService.create(createAgencyDto);
   }
 
+  @IsPublic()
   @Get()
   findAll(@Query() paginationDto: PaginationDto) {
     return this.agenciesService.findAll(paginationDto);

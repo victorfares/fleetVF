@@ -1,3 +1,15 @@
+<script setup lang="ts">
+import type { Agency } from '@/types/Agency';
+
+defineProps<{
+  agency: Agency,
+  isPublic?: boolean // <--- Prop para alternar modo
+}>();
+
+// Emitir eventos diferentes dependendo da ação
+defineEmits(['edit', 'view-fleet']); 
+</script>
+
 <template>
   <v-card elevation="0" class="h-100 rounded-lg border hover-card bg-white">
     <v-card-item>
@@ -12,7 +24,7 @@
       </v-card-title>
       
       <v-card-subtitle class="text-caption font-weight-bold text-grey-darken-3">
-        ID: #{{ agency.id }}
+        ID: #{{ agency.id.slice(0, 8) }}...
       </v-card-subtitle>
     </v-card-item>
 
@@ -36,6 +48,19 @@
 
     <v-card-actions class="pa-3 pt-0">
       <v-btn 
+        v-if="isPublic"
+        variant="flat" 
+        color="primary"
+        class="font-weight-bold"
+        block 
+        size="small"
+        @click="$emit('view-fleet', agency)"
+      >
+        Ver Frota Disponível
+      </v-btn>
+
+      <v-btn 
+        v-else
         variant="flat" 
         color="grey-lighten-3"
         class="text-black font-weight-bold"
@@ -48,16 +73,6 @@
     </v-card-actions>
   </v-card>
 </template>
-
-<script setup lang="ts">
-import type { Agency } from '@/types/Agency';
-
-defineProps<{
-  agency: Agency
-}>();
-
-defineEmits(['edit']);
-</script>
 
 <style scoped>
 .hover-card {

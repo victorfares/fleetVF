@@ -7,9 +7,9 @@ import { CreateCarDto } from './dto/create-car.dto';
 import { UpdateCarDto } from './dto/update-car.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Car } from './entities/car.entity';
-import { Repository, ILike } from 'typeorm';
+import { Repository, ILike, FindOptionsWhere } from 'typeorm';
 import { AgenciesService } from '../agencies/agencies.service';
-import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { FindCarsDto } from './dto/find-cars.dto';
 
 @Injectable()
 export class CarsService {
@@ -28,14 +28,29 @@ export class CarsService {
     return await this.carRepository.save(car);
   }
 
-  async findAll(paginationDto: PaginationDto, searchTerm?: string) {
-    const { limit = 10, offset = 0 } = paginationDto || {};
-    const where = searchTerm
-      ? [
-          { model: ILike(`%${searchTerm}%`) }, // Busca por Modelo
-          { brand: ILike(`%${searchTerm}%`) },
-        ]
-      : {};
+  async findAll(findCarsDto: FindCarsDto) {
+    const { limit = 10, offset = 0, search, agencyId } = findCarsDto;
+
+    let where: FindOptionsWhere<Car> | FindOptionsWhere<Car>[] = {};
+
+    if (search) {
+      where = [
+        { model: ILike(`%${search}%`) },
+        { brand: ILike(`%${search}%`) },
+      ];
+    }
+
+    if (agencyId) {
+      if (Array.isArray(where)) {
+        where = where.map((condition) => ({
+          ...condition,
+          agency: { id: agencyId },
+        }));
+      } else {
+        // Se não tem busca textual, é apenas um filtro simples
+        where = { agency: { id: agencyId } };
+      }
+    }
 
     const [results, total] = await this.carRepository.findAndCount({
       where,

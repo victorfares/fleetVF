@@ -15,6 +15,7 @@ import { UpdateCarDto } from './dto/update-car.dto';
 import { FindCarsDto } from './dto/find-cars.dto';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { UserRole } from '../users/enums/user-role.enum';
+import { IsPublic } from 'src/common/decorators/is-public.decorator';
 
 @Controller('cars')
 export class CarsController {
@@ -26,11 +27,13 @@ export class CarsController {
     return this.carsService.create(createCarDto);
   }
 
+  @IsPublic()
   @Get()
   findAll(@Query() query: FindCarsDto) {
-    return this.carsService.findAll(query, query.search);
+    return this.carsService.findAll(query);
   }
 
+  @IsPublic()
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.carsService.findOne(id);

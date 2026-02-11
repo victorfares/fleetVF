@@ -1,6 +1,6 @@
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import api from '@/services/api';
-import type { Car, CarResponse } from '@/types/Car';
+import type { Car } from '@/types/Car';
 
 export function useCars() {
   const cars = ref<Car[]>([]);
@@ -8,9 +8,10 @@ export function useCars() {
   const error = ref<string | null>(null);
   
   const page = ref(1);
-  const itemsPerPage = ref(10);
+  const itemsPerPage = ref(10); 
   const totalItems = ref(0);
   const search = ref('');
+  const agencyIdFilter = ref<string | null>(null);
 
   const fetchCars = async () => {
     loading.value = true;
@@ -23,12 +24,15 @@ export function useCars() {
         params: {
           limit: itemsPerPage.value,
           offset: offset,
-          search: search.value || undefined, // Só envia se tiver valor
+          search: search.value || undefined,
+          agencyId: agencyIdFilter.value || undefined,
         }
       });
+
       const responseData = data.data ? data.data : data; 
       
-      cars.value = (responseData.data || responseData) as Car[];
+      const extractedList = responseData.data || responseData;
+      cars.value = Array.isArray(extractedList) ? extractedList : [];
       totalItems.value = responseData.count || cars.value.length;
 
     } catch (err: any) {
@@ -44,7 +48,7 @@ export function useCars() {
       await api.delete(`/cars/${id}`);
       await fetchCars();
       return true;
-    } catch (err) {
+    } catch (error) {
       console.error('Erro ao deletar:', err);
       throw new Error('Falha ao excluir veículo.');
     }
@@ -58,6 +62,7 @@ export function useCars() {
     itemsPerPage,
     totalItems,
     search,
+    agencyIdFilter,
     fetchCars,
     deleteCar,
   };
