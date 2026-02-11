@@ -5,11 +5,13 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Agency } from '../../agencies/entities/agency.entity';
 import { CarStatus } from '../enums/car-status.enum';
+import { Rental } from 'src/modules/rentals/entities/rental.entity';
 
 @Entity({ name: 'cars' })
 export class Car {
@@ -41,7 +43,7 @@ export class Car {
   @Column({ name: 'image_url', nullable: true }) // Pode ser nulo se não tiver foto
   imageUrl: string;
 
-  @Column({ name: 'agency_id', nullable: true }) 
+  @Column({ name: 'agency_id', nullable: true })
   agencyId: string;
 
   @CreateDateColumn({ name: 'created_at' })
@@ -59,4 +61,7 @@ export class Car {
 
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt?: Date;
+
+  @OneToMany(() => Rental, (rental) => rental.car)
+  rentals: Rental[];
 }

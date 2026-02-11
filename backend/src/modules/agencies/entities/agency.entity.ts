@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Car } from '../../cars/entities/car.entity';
+import { Rental } from 'src/modules/rentals/entities/rental.entity';
 
 @Entity({ name: 'agencies' })
 export class Agency {
@@ -37,4 +38,10 @@ export class Agency {
 
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt?: Date;
+
+  @OneToMany(() => Rental, (rental) => rental.pickupAgency)
+  pickupRentals: Rental[];
+
+  @OneToMany(() => Rental, (rental) => rental.returnAgency)
+  returnRentals: Rental[];
 }
