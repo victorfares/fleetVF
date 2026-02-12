@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useAppStore } from '@/stores/app';
@@ -34,17 +34,23 @@ async function handleRegister() {
   errorMessage.value = '';
 
   try {
-    await authStore.register({
+    const isAutoLogged = await authStore.register({
       name: form.value.name,
       email: form.value.email,
       password: form.value.password
     });
-    appStore.notifySuccess('Conta criada com sucesso! Faça login para continuar.');
-    router.push('/login');
+    
+    if (isAutoLogged) {
+      appStore.notify('Cadastro realizado! Bem-vindo(a).', 'success');
+      router.push('/'); 
+    } else {
+      appStore.notify('Conta criada com sucesso! Faça login.', 'success');
+      router.push('/login');
+    }
     
   } catch (error: any) {
     console.error('Erro no cadastro:', error);
-    errorMessage.value = error.response?.data?.message || 'Erro ao criar conta. Tente novamente.';
+    errorMessage.value = error.response?.data?.message || 'Erro ao criar conta.';
   } finally {
     loading.value = false;
   }
@@ -155,7 +161,7 @@ function goToLogin() {
                 height="48"
                 rounded="lg"
               >
-                CRIAR CONTA
+                CRIAR CONTA E ENTRAR
               </v-btn>
             </v-form>
 
@@ -173,7 +179,7 @@ function goToLogin() {
         </v-card>
 
         <div class="text-center mt-6 text-white text-caption opacity-80">
-          &copy; 2026 FleetVF. Todos os direitos reservados.
+          &copy; {{ new Date().getFullYear() }} FleetVF. Todos os direitos reservados.
         </div>
 
       </v-col>

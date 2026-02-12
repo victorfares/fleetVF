@@ -36,8 +36,6 @@ export class UsersService {
     });
 
     return await this.userRepository.save(user);
-
-    return 'This action adds a new user';
   }
 
   async findAll() {

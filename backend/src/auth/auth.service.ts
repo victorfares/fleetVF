@@ -1,4 +1,9 @@
-import { BadRequestException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { LoginDto } from './hashing/dto/login.dto';
 import jwtConfig from './config/jwt.config';
 import type { ConfigType } from '@nestjs/config';
@@ -33,6 +38,24 @@ export class AuthService {
       throw new UnauthorizedException('Email ou senha inválidos');
     }
 
+    return this.generateToken(user);
+  }
+
+  async signup(signupDto: SignupDto) {
+    const userExists = await this.usersService.findByEmail(signupDto.email);
+    if (userExists) {
+      throw new BadRequestException('Email já cadastrado.');
+    }
+
+    const newUser = await this.usersService.create({
+      ...signupDto,
+      role: UserRole.CLIENT,
+    });
+
+    return this.generateToken(newUser);
+  }
+
+  private async generateToken(user: any) {
     const payload = {
       sub: user.id,
       email: user.email,
@@ -44,7 +67,7 @@ export class AuthService {
 
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.jwtConfiguration.secret,
-      expiresIn: this.jwtConfiguration.jwtTtl, // Tempo de vida (ex: 3600s)
+      expiresIn: this.jwtConfiguration.jwtTtl,
     });
 
     return {
@@ -56,18 +79,5 @@ export class AuthService {
         role: user.role,
       },
     };
-  }
-
-  async signup(signupDto: SignupDto) {
-    const userExists = await this.usersService.findByEmail(signupDto.email);
-    if (userExists) {
-      throw new BadRequestException('Email já cadastrado.');
-    }
-    const newUser = await this.usersService.create({
-      ...signupDto,
-      role: UserRole.CLIENT,
-    });
-
-    return newUser;
   }
 }
