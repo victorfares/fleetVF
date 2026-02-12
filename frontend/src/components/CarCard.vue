@@ -85,6 +85,7 @@ import { computed } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { CarStatus } from '@/types/Car';
 import type { Car } from '@/types/Car';
+import { useFormatters } from '@/composables/useFormatters';
 
 const props = defineProps<{
   car: Car
@@ -93,6 +94,7 @@ const props = defineProps<{
 const emit = defineEmits(['reserve', 'edit']);
 
 const authStore = useAuthStore();
+const { formatCurrency } = useFormatters();
 
 const canEdit = computed(() => authStore.isAdmin || authStore.isManager);
 
@@ -119,10 +121,7 @@ const statusTranslation: Record<CarStatus, string> = {
   [CarStatus.MAINTENANCE]: 'Manutenção',
 };
 
-const formatCurrency = (val: number) => 
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
-
-const formatNumber = (val: number) => 
+const formatNumber = (val: number) =>
   new Intl.NumberFormat('pt-BR').format(val);
 </script>
 

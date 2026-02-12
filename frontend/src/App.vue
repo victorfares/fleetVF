@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import DefaultLayout from '@/layouts/DefaultLayout.vue';
+import GlobalSnackbar from '@/components/GlobalSnackbar.vue';
 
 const route = useRoute();
 
@@ -11,6 +12,7 @@ const isBlankLayout = computed(() => route.meta.layout === 'blank');
 <template>
   <v-app v-if="isBlankLayout" style="font-family: 'Inter', sans-serif;">
     <router-view />
+    <GlobalSnackbar />
   </v-app>
 
   <DefaultLayout v-else>

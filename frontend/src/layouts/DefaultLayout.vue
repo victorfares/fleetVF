@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import GlobalSnackbar from '@/components/GlobalSnackbar.vue';
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -11,7 +12,12 @@ const rail = ref(false);
 
 const userInitials = computed(() => {
   const name = authStore.user?.name || 'VF';
-  return name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase();
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 });
 
 const menuItems = computed(() => {
@@ -41,7 +47,7 @@ const menuItems = computed(() => {
       { title: 'Criar Conta', icon: 'mdi-account-plus', to: '/signup' }
     );
   }
-  
+
   return menus;
 });
 
@@ -187,5 +193,7 @@ function handleLogout() {
         &copy; {{ new Date().getFullYear() }} FleetVF. Desenvolvido por Victor Fares.
       </div>
     </v-footer>
+
+    <GlobalSnackbar />
   </v-app>
 </template>

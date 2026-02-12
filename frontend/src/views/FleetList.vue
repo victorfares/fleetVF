@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useCars } from '@/composables/useCars';
 import { useAuthStore } from '@/stores/auth';
+import { useAppStore } from '@/stores/app';
 import type { Car } from '@/types/Car';
 
 import CarCard from '@/components/CarCard.vue';
@@ -10,6 +11,7 @@ import CarFormDialog from '@/components/CarFormDialog.vue';
 
 const route = useRoute();
 const authStore = useAuthStore();
+const appStore = useAppStore();
 const { 
   cars, 
   loading, 
@@ -39,7 +41,9 @@ const handleEditCar = (car: Car) => {
 };
 
 const handleReserve = (carId: string) => {
-  alert('Funcionalidade de Reserva em desenvolvimento! Em breve você poderá agendar.');
+  appStore.notifyInfo(
+    'Funcionalidade de reserva em desenvolvimento. Em breve você poderá agendar.'
+  );
 };
 
 const onCarSaved = () => {

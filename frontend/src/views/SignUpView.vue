@@ -2,9 +2,11 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useAppStore } from '@/stores/app';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const appStore = useAppStore();
 
 const valid = ref(false);
 const loading = ref(false);
@@ -37,7 +39,7 @@ async function handleRegister() {
       email: form.value.email,
       password: form.value.password
     });
-    alert('Conta criada com sucesso! Faça login para continuar.');
+    appStore.notifySuccess('Conta criada com sucesso! Faça login para continuar.');
     router.push('/login');
     
   } catch (error: any) {

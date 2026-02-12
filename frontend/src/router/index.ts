@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useAppStore } from '@/stores/app';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -70,6 +71,7 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
+  const appStore = useAppStore();
   
   const isAuthenticated = authStore.isAuthenticated;
   const userRole = authStore.user?.role;
@@ -84,7 +86,7 @@ router.beforeEach(async (to, from, next) => {
 
   if (to.meta.roles && Array.isArray(to.meta.roles)) {
     if (!userRole || !to.meta.roles.includes(userRole)) {
-      alert('Acesso não autorizado para seu perfil.');
+      appStore.notifyWarning('Acesso não autorizado para seu perfil.');
       return next('/');
     }
   }

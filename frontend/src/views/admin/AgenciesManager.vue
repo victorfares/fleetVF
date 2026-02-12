@@ -2,19 +2,22 @@
 import { ref, watch } from 'vue';
 import { useAgencies } from '@/composables/useAgencies';
 import type { Agency } from '@/types/Agency';
+import { useAppStore } from '@/stores/app';
 import AgencyFormDialog from '@/components/AgencyFormDialog.vue';
 
 // 1. Uso do Composable (Lógica separada)
-const { 
-  agencies, 
-  loading, 
-  totalItems, 
-  page, 
-  itemsPerPage, 
-  search, 
-  fetchAgencies, 
-  deleteAgency 
+const {
+  agencies,
+  loading,
+  totalItems,
+  page,
+  itemsPerPage,
+  search,
+  fetchAgencies,
+  deleteAgency,
 } = useAgencies();
+
+const appStore = useAppStore();
 
 // 2. Estado Local (Dialogs e UI)
 const isDialogOpen = ref(false);
@@ -48,7 +51,9 @@ const handleDelete = async (agency: Agency) => {
   try {
     await deleteAgency(agency.id);
   } catch (error) {
-    alert('Erro ao excluir agência. Verifique se não há carros vinculados.');
+    appStore.notifyError(
+      'Erro ao excluir agência. Verifique se não há carros vinculados.'
+    );
   } finally {
     deleteLoading.value = null;
   }
@@ -114,7 +119,6 @@ fetchAgencies();
             prepend-inner-icon="mdi-magnify"
             single-line
             hide-details
-            class="max-width-300"
             style="max-width: 300px"
           ></v-text-field>
         </v-card-title>
@@ -199,9 +203,3 @@ fetchAgencies();
 
   </v-container>
 </template>
-
-<style scoped>
-.max-width-300 {
-  max-width: 300px;
-}
-</style>

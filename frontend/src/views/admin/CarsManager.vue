@@ -3,19 +3,24 @@ import { ref, watch } from 'vue';
 import { useCars } from '@/composables/useCars';
 import { CarStatus } from '@/types/Car';
 import type { Car } from '@/types/Car';
+import { useAppStore } from '@/stores/app';
+import { useFormatters } from '@/composables/useFormatters';
 
 import CarFormDialog from '@/components/CarFormDialog.vue';
 
-const { 
-  cars, 
-  loading, 
-  totalItems, 
-  page, 
-  itemsPerPage, 
-  search, 
-  fetchCars, 
-  deleteCar 
+const {
+  cars,
+  loading,
+  totalItems,
+  page,
+  itemsPerPage,
+  search,
+  fetchCars,
+  deleteCar,
 } = useCars();
+
+const appStore = useAppStore();
+const { formatCurrency } = useFormatters();
 
 const isDialogOpen = ref(false);
 const carToEdit = ref<Car | null>(null);
@@ -48,7 +53,7 @@ const handleDelete = async (car: Car) => {
   try {
     await deleteCar(car.id);
   } catch (error) {
-    alert('Erro ao excluir veículo.');
+    appStore.notifyError('Erro ao excluir veículo. Verifique e tente novamente.');
   } finally {
     deleteLoading.value = null;
   }
@@ -81,9 +86,6 @@ const getStatusColor = (status: CarStatus) => {
     default: return 'grey';
   }
 };
-
-const formatCurrency = (val: number) => 
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
 // Carga Inicial
 fetchCars();
@@ -126,7 +128,6 @@ fetchCars();
             prepend-inner-icon="mdi-magnify"
             single-line
             hide-details
-            class="max-width-300"
             style="max-width: 300px"
           ></v-text-field>
         </v-card-title>
@@ -226,9 +227,3 @@ fetchCars();
 
   </v-container>
 </template>
-
-<style scoped>
-.max-width-300 {
-  max-width: 300px;
-}
-</style>

@@ -1,8 +1,11 @@
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
 
+const baseURL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
 const api = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -27,14 +30,14 @@ api.interceptors.response.use(
 
     if (error.response && error.response.status === 401) {
       const authStore = useAuthStore();
-      
+
       console.warn('Sessão expirada. Deslogando...');
       authStore.logout();
-      
+
       // Usa window.location para garantir limpeza total de estado
       window.location.href = '/login';
     }
-    
+
     return Promise.reject(error);
   }
 );
