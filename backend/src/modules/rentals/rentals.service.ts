@@ -125,8 +125,15 @@ export class RentalsService {
     return await this.rentalRepository.save(rental);
   }
 
-  async findAll(limit = 10, offset = 0) {
+  async findAll(limit = 10, offset = 0, userId?: string) {
+    const where: any = {};
+
+    if (userId) {
+      where.user = { id: userId };
+    }
+
     const [results, total] = await this.rentalRepository.findAndCount({
+      where,
       relations: ['user', 'car', 'pickupAgency', 'returnAgency'],
       order: { createdAt: 'DESC' },
       take: limit,

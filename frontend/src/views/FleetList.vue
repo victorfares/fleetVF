@@ -3,15 +3,15 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useCars } from '@/composables/useCars';
 import { useAuthStore } from '@/stores/auth';
-import { useAppStore } from '@/stores/app';
 import type { Car } from '@/types/Car';
 
 import CarCard from '@/components/CarCard.vue';
-import CarFormDialog from '@/components/CarFormDialog.vue'; 
+import CarFormDialog from '@/components/CarFormDialog.vue';
+import RentalBookingDialog from '@/components/RentalBookingDialog.vue'; // Importação do Dialog de Reserva
 
 const route = useRoute();
 const authStore = useAuthStore();
-const appStore = useAppStore();
+
 const { 
   cars, 
   loading, 
@@ -24,8 +24,12 @@ const {
   fetchCars 
 } = useCars();
 
-const isDialogOpen = ref(false);
+const isFormDialogOpen = ref(false);
 const carToEdit = ref<Car | null>(null);
+
+const isRentDialogOpen = ref(false);
+const selectedCarForRent = ref<Car | null>(null);
+
 let searchTimeout: ReturnType<typeof setTimeout>;
 
 itemsPerPage.value = 10;
@@ -36,19 +40,22 @@ const hasCars = computed(() => Array.isArray(cars.value) && cars.value.length > 
 const handleEditCar = (car: Car) => {
   if (authStore.isAdmin || authStore.isManager) {
     carToEdit.value = car;
-    isDialogOpen.value = true;
+    isFormDialogOpen.value = true;
   }
 };
 
-const handleReserve = (carId: string) => {
-  appStore.notifyInfo(
-    'Funcionalidade de reserva em desenvolvimento. Em breve você poderá agendar.'
-  );
+const handleReserve = (car: Car) => {
+  selectedCarForRent.value = car;
+  isRentDialogOpen.value = true;
 };
 
 const onCarSaved = () => {
   fetchCars();
-  isDialogOpen.value = false;
+  isFormDialogOpen.value = false;
+};
+
+const onRentalSuccess = () => {
+  fetchCars();
 };
 
 watch(page, () => {
@@ -65,12 +72,10 @@ watch(search, (newVal) => {
 });
 
 onMounted(() => {
-  // 1. Verifica Busca de Texto
   if (route.query.search) {
     search.value = String(route.query.search);
   }
 
-  // 2. Verifica Filtro de Agência
   if (route.query.agencyId) {
     agencyIdFilter.value = String(route.query.agencyId);
   } else {
@@ -89,7 +94,7 @@ onMounted(() => {
         
         <div class="d-flex align-center justify-space-between w-100">
           <div class="d-flex flex-column">
-            <h1 class="text-h5 font-weight-black text-grey-darken-4 lh-1">
+            <h1 class="text-h5 font-weight-black text-grey-darken-4 text-no-wrap">
               {{ agencyIdFilter ? 'Frota da Agência' : 'Nossa Frota' }}
             </h1>
             <span class="text-body-2 text-grey mt-1">
@@ -104,7 +109,7 @@ onMounted(() => {
             variant="flat" 
             class="font-weight-bold ml-4"
             elevation="2"
-            @click="(carToEdit = null), (isDialogOpen = true)"
+            @click="(carToEdit = null), (isFormDialogOpen = true)"
           >
             Novo Veículo
           </v-btn>
@@ -176,7 +181,7 @@ onMounted(() => {
             :car="car" 
             class="h-100"
             @edit="handleEditCar" 
-            @reserve="handleReserve"
+            @reserve="handleReserve(car)"
           />
         </v-col>
       </v-row>
@@ -197,9 +202,15 @@ onMounted(() => {
       </v-row>
 
       <CarFormDialog 
-        v-model="isDialogOpen" 
+        v-model="isFormDialogOpen" 
         :car-to-edit="carToEdit" 
         @saved="onCarSaved" 
+      />
+
+      <RentalBookingDialog
+        v-model="isRentDialogOpen"
+        :car="selectedCarForRent"
+        @success="onRentalSuccess"
       />
 
     </v-container>
@@ -207,8 +218,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.lh-1 { line-height: 1; }
-.h-100 { height: 100% !important; }
 @media (min-width: 1920px) {
   .v-col-xl-custom-5 {
     flex: 0 0 20%;

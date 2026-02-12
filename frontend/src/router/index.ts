@@ -2,27 +2,28 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useAppStore } from '@/stores/app';
 
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    // --- ROTAS PÚBLICAS (Acessíveis sem login) ---
+    // --- ROTAS PÚBLICAS ---
     {
       path: '/',
       name: 'home',
       component: () => import('@/views/HomeView.vue'),
-      meta: { requiresAuth: false } // Explícito: Não precisa de senha
+      meta: { requiresAuth: false }
     },
     {
       path: '/frota',
       name: 'fleet-list',
       component: () => import('@/views/FleetList.vue'),
-      meta: { requiresAuth: false } // Explícito
+      meta: { requiresAuth: false }
     },
     {
       path: '/agencias',
       name: 'agencies-list',
       component: () => import('@/views/AgenciesList.vue'),
-      meta: { requiresAuth: false } // Explícito
+      meta: { requiresAuth: false }
     },
     {
       path: '/login',
@@ -37,15 +38,15 @@ const router = createRouter({
       meta: { requiresAuth: false }
     },
 
-    // --- ROTAS DO CLIENTE (Requer Login) ---
+    // --- ROTAS DO CLIENTE ---
     {
       path: '/meus-alugueis',
-      name: 'my-rentals',
-      component: () => import('@/views/HomeView.vue'), // Placeholder
+      name: 'meus-alugueis',
+      component: () => import('@/views/MyRentalsView.vue'), 
       meta: { requiresAuth: true }
     },
 
-    // --- ROTAS ADMINISTRATIVAS (Requer Login + Permissão) ---
+    // --- ROTAS ADMINISTRATIVAS ---
     {
       path: '/admin/cars',
       name: 'admin-cars',
@@ -58,7 +59,13 @@ const router = createRouter({
       component: () => import('@/views/admin/AgenciesManager.vue'),
       meta: { requiresAuth: true, roles: ['ADMIN', 'MANAGER'] }
     },
-        {
+    {
+      path: '/admin/reservas',
+      name: 'admin-reservas',
+      component: () => import('@/views/admin/AdminRentalsView.vue'),
+      meta: { requiresAuth: true, roles: ['ADMIN', 'MANAGER'] }
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: '/'
     }
@@ -85,6 +92,7 @@ router.beforeEach(async (to, from, next) => {
   }
 
   if (to.meta.roles && Array.isArray(to.meta.roles)) {
+    // TypeScript safe check
     if (!userRole || !to.meta.roles.includes(userRole)) {
       appStore.notifyWarning('Acesso não autorizado para seu perfil.');
       return next('/');

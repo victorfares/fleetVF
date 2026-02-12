@@ -35,8 +35,17 @@ export class RentalsController {
   }
 
   @Get()
-  @Roles(UserRole.ADMIN, UserRole.MANAGER)
-  findAll(@Query('limit') limit = 10, @Query('offset') offset = 0) {
+  findAll(
+    @Query('limit') limit = 10,
+    @Query('offset') offset = 0,
+    @Req() req: any,
+  ) {
+    const user = req.user;
+
+    if (user.role === UserRole.CLIENT) {
+      return this.rentalsService.findAll(+limit, +offset, user.id);
+    }
+
     return this.rentalsService.findAll(+limit, +offset);
   }
 

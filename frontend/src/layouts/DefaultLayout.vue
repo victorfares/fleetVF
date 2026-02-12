@@ -32,7 +32,8 @@ const menuItems = computed(() => {
       menus.push(
         { type: 'divider' },
         { title: 'Gestão de Veículos', icon: 'mdi-car-cog', to: '/admin/cars' },
-        { title: 'Gestão de Agências', icon: 'mdi-office-building-cog', to: '/admin/agencies' }
+        { title: 'Gestão de Agências', icon: 'mdi-office-building-cog', to: '/admin/agencies' },
+        { title: 'Gestão de Reservas', icon: 'mdi-calendar-clock', to: '/admin/reservas' },
       );
     } else {
       menus.push(
