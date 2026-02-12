@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
-import { useCars } from '@/composables/useCars'
+import { useCars } from '@/composables/useCars';
 import CarCard from '@/components/CarCard.vue';
 
 const router = useRouter();
@@ -18,7 +18,7 @@ const {
 // Estado da busca rápida
 const searchTerm = ref('');
 
-// Ação de Buscar (Redireciona para a Frota com filtro)
+// Ação de Buscar
 function handleSearch() {
   if (searchTerm.value && searchTerm.value.trim() !== '') {
     router.push({ path: '/frota', query: { search: searchTerm.value } });
@@ -31,9 +31,7 @@ function goToFleet() {
   router.push('/frota');
 }
 
-// Inicialização
 onMounted(() => {
-  // Configura para buscar apenas 3 carros para a vitrine
   itemsPerPage.value = 3; 
   fetchCars();
 });
@@ -96,9 +94,11 @@ const benefits = [
           <v-col cols="12" md="6" lg="6" offset-lg="1" class="position-relative mt-10 mt-md-0">
               <v-sheet color="secondary" class="rounded-circle position-absolute d-none d-md-block" height="200" width="200" style="opacity: 0.1; bottom: -40px; left: -40px;"></v-sheet>
 
-              <v-card elevation="16" rounded="xl" class="border-0 overflow-hidden bg-white">
+              <v-card elevation="24" rounded="xl" class="border overflow-hidden bg-white border-primary border-opacity-25">
                 <v-img src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=1000&auto=format&fit=crop" height="200" cover gradient="to bottom, rgba(0,0,0,0), rgba(0,0,0,0.6)" class="align-end">
-                  <v-card-title class="text-white text-h5 font-weight-bold px-6 pb-4">Encontre seu carro ideal</v-card-title>
+                  <v-card-title class="text-white text-h5 font-weight-bold px-6 pb-4" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                    Encontre seu carro ideal
+                  </v-card-title>
                 </v-img>
 
                 <v-card-text class="pt-8 px-6">
@@ -106,17 +106,19 @@ const benefits = [
                     v-model="searchTerm"
                     label="Buscar por marca ou modelo (ex: Toyota)"
                     prepend-inner-icon="mdi-car-search"
-                    variant="outlined"
-                    density="comfortable"
+                    variant="solo-filled" 
+                    bg-color="grey-lighten-4"
+                    flat
+                    density="default"
                     color="primary"
                     hide-details="auto"
-                    class="mb-2"
+                    class="mb-2 text-h6"
                     @keyup.enter="handleSearch"
                   ></v-text-field>
                 </v-card-text>
 
                 <v-card-actions class="px-6 pb-6 pt-0">
-                  <v-btn block color="secondary" variant="flat" size="large" class="font-weight-bold rounded-lg text-white" @click="handleSearch">
+                  <v-btn block color="secondary" variant="elevated" size="x-large" class="font-weight-bold rounded-lg text-white" @click="handleSearch">
                     Buscar Veículos
                   </v-btn>
                 </v-card-actions>
@@ -166,20 +168,28 @@ const benefits = [
       </v-row>
     </v-container>
 
-    <v-sheet color="blue-lighten-5" class="py-16 text-center">
+    <v-sheet class="py-16 text-center bg-grey-lighten-4">
       <v-container>
         <v-row justify="center" class="mb-10">
           <v-col cols="12" md="8">
-            <h3 class="text-h4 font-weight-bold mb-4 text-primary">Por que alugar com a FleetVF?</h3>
-            <p class="text-h6 font-weight-regular text-grey-darken-2">Simplificamos o processo para você.</p>
+            <h3 class="text-h4 font-weight-bold mb-4 text-grey-darken-4">Por que alugar com a FleetVF?</h3>
+            <p class="text-h6 font-weight-regular text-grey-darken-1">Simplificamos o processo para você.</p>
           </v-col>
         </v-row>
+        
         <v-row justify="center" class="text-center">
           <v-col v-for="(benefit, i) in benefits" :key="i" cols="12" sm="6" md="4">
-            <v-card color="primary" theme="dark" class="py-8 px-4 h-100 rounded-xl" elevation="6">
-              <v-avatar color="white" size="80" class="mb-6" variant="flat"><v-icon :icon="benefit.icon" color="primary" size="40"></v-icon></v-avatar>
-              <h4 class="text-h6 font-weight-bold mb-3">{{ benefit.title }}</h4>
-              <p class="text-body-2 px-4 opacity-90">{{ benefit.desc }}</p>
+            <v-card 
+                class="py-10 px-6 h-100 rounded-xl d-flex flex-column align-center justify-center transition-swing" 
+                elevation="10"
+                style="background: linear-gradient(135deg, #1976D2 0%, #6200EA 100%); color: white;"
+            >
+              <v-avatar color="white" size="90" class="mb-6 elevation-3" variant="flat">
+                <v-icon :icon="benefit.icon" color="primary" size="48"></v-icon>
+              </v-avatar>
+              
+              <h4 class="text-h5 font-weight-black mb-3 text-white">{{ benefit.title }}</h4>
+              <p class="text-body-1 opacity-90 text-white font-weight-medium">{{ benefit.desc }}</p>
             </v-card>
           </v-col>
         </v-row>
@@ -207,3 +217,16 @@ const benefits = [
 
   </v-container>
 </template>
+
+<style scoped>
+.z-index-1 {
+  z-index: 1;
+}
+.lh-sm {
+  line-height: 1.4;
+}
+.transition-swing:hover {
+  transform: translateY(-5px);
+  transition: transform 0.3s ease;
+}
+</style>
