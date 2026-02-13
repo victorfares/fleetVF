@@ -119,7 +119,7 @@ onMounted(() => {
           <v-text-field
             v-model="search"
             prepend-inner-icon="mdi-magnify"
-            label="Buscar por modelo, marca ou placa..."
+            label="Buscar por modelo ou marca"
             variant="outlined"
             density="comfortable"
             hide-details

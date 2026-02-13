@@ -42,6 +42,12 @@ const router = createRouter({
       component: () => import("@/views/CarDetailsView.vue"),
       props: true,
     },
+    {
+      path: "/agencias/:id",
+      name: "agency-details",
+      component: () => import("@/views/AgencyDetailsView.vue"),
+      props: true,
+    },
 
     // --- ROTAS DO CLIENTE ---
     {

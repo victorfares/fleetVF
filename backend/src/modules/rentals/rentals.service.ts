@@ -4,6 +4,7 @@ import {
   NotFoundException,
   ConflictException,
   InternalServerErrorException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -13,6 +14,7 @@ import {
   MoreThanOrEqual,
   Not,
   In,
+  Brackets,
 } from 'typeorm';
 import { differenceInDays } from 'date-fns';
 
@@ -25,6 +27,8 @@ import { Car } from '../cars/entities/car.entity';
 import { RentalStatus } from './enums/rental-status.enum';
 import { User } from '../users/entities/user.entity';
 import { Agency } from '../agencies/entities/agency.entity';
+import { FindRentalsDto } from './dto/find-rentals.dto';
+import { UserRole } from '../users/enums/user-role.enum';
 
 @Injectable()
 export class RentalsService {
@@ -157,20 +161,91 @@ export class RentalsService {
     }
   }
 
-  async findAll(limit = 10, offset = 0, userId?: string) {
-    const where: any = {};
+  async findAll(dto: FindRentalsDto, currentUser: User) {
+    const {
+      limit,
+      offset,
+      status,
+      userId,
+      orderBy = 'createdAt',
+      orderDirection,
+      startDateMin,
+      startDateMax,
+      search, // Recebe o termo de busca
+    } = dto;
 
-    if (userId) {
-      where.user = { id: userId };
+    const query = this.rentalRepository.createQueryBuilder('rental');
+
+    query.leftJoinAndSelect('rental.user', 'user');
+    query.leftJoinAndSelect('rental.car', 'car');
+    query.leftJoinAndSelect('rental.pickupAgency', 'pickupAgency');
+    query.leftJoinAndSelect('rental.returnAgency', 'returnAgency');
+
+    // 1. Filtro de Segurança (Admin/Manager vs Usuário Comum)
+    const isAdminOrManager =
+      currentUser.role === UserRole.ADMIN ||
+      currentUser.role === UserRole.MANAGER;
+
+    if (!isAdminOrManager) {
+      query.andWhere('rental.userId = :currentUserId', {
+        currentUserId: currentUser.id,
+      });
+    } else {
+      // Se for Admin e quiser filtrar por um usuário específico
+      if (userId) {
+        query.andWhere('rental.userId = :userId', { userId });
+      }
     }
 
-    const [results, total] = await this.rentalRepository.findAndCount({
-      where,
-      relations: ['user', 'car', 'pickupAgency', 'returnAgency'],
-      order: { createdAt: 'DESC' },
-      take: limit,
-      skip: offset,
-    });
+    // 2. Filtro de Status
+    if (status) {
+      query.andWhere('rental.status = :status', { status });
+    }
+
+    // 3. Filtro de Data (Range)
+    if (startDateMin) {
+      query.andWhere('rental.startDate >= :startDateMin', { startDateMin });
+    }
+    if (startDateMax) {
+      query.andWhere('rental.startDate <= :startDateMax', { startDateMax });
+    }
+
+    // 4. LÓGICA DE BUSCA TEXTUAL (Search)
+    // Usa Brackets para isolar o OR: (nome OU email OU placa OU modelo)
+    if (search) {
+      query.andWhere(
+        new Brackets((qb) => {
+          qb.where('user.name ILIKE :search', { search: `%${search}%` })
+            .orWhere('user.email ILIKE :search', { search: `%${search}%` })
+            .orWhere('car.model ILIKE :search', { search: `%${search}%` })
+            .orWhere('car.licensePlate ILIKE :search', {
+              search: `%${search}%`,
+            });
+        }),
+      );
+    }
+
+    // 5. Ordenação
+    const allowedSortFields = [
+      'createdAt',
+      'startDate',
+      'endDate',
+      'totalValue',
+      'status',
+    ];
+
+    // Garante que o campo de ordenação é válido
+    const sortField = allowedSortFields.includes(orderBy)
+      ? `rental.${orderBy}`
+      : 'rental.createdAt';
+
+    query.orderBy(sortField, orderDirection || 'DESC');
+
+    // 6. Paginação
+    query.take(limit);
+    query.skip(offset);
+
+    const [results, total] = await query.getManyAndCount();
 
     return {
       data: results,
@@ -180,12 +255,26 @@ export class RentalsService {
     };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, currentUser?: User) {
     const rental = await this.rentalRepository.findOne({
       where: { id },
       relations: ['user', 'car', 'pickupAgency', 'returnAgency'],
     });
+
     if (!rental) throw new NotFoundException('Reserva não encontrada');
+
+    if (currentUser) {
+      const isAdminOrManager =
+        currentUser.role === UserRole.ADMIN ||
+        currentUser.role === UserRole.MANAGER;
+
+      if (!isAdminOrManager && rental.user.id !== currentUser.id) {
+        throw new ForbiddenException(
+          'Você não tem permissão para visualizar esta reserva.',
+        );
+      }
+    }
+
     return rental;
   }
 

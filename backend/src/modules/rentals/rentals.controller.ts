@@ -18,6 +18,7 @@ import { Roles } from 'src/common/decorators/roles.decorator';
 import { UserRole } from '../users/enums/user-role.enum';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
+import { FindRentalsDto } from './dto/find-rentals.dto';
 
 @Controller('rentals')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -35,23 +36,13 @@ export class RentalsController {
   }
 
   @Get()
-  findAll(
-    @Query('limit') limit = 10,
-    @Query('offset') offset = 0,
-    @Req() req: any,
-  ) {
-    const user = req.user;
-
-    if (user.role === UserRole.CLIENT) {
-      return this.rentalsService.findAll(+limit, +offset, user.id);
-    }
-
-    return this.rentalsService.findAll(+limit, +offset);
+  findAll(@Query() query: FindRentalsDto, @Req() req: any) {
+    return this.rentalsService.findAll(query, req.user);
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.rentalsService.findOne(id);
+  findOne(@Param('id', ParseUUIDPipe) id: string, @Req() req: any) {
+    return this.rentalsService.findOne(id, req.user);
   }
 
   @Patch(':id')

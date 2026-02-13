@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useRentals } from '@/composables/useRentals';
 import { useAgencies } from '@/composables/useAgencies';
+import { useFormatters } from '@/composables/useFormatters'; // Importe os formatadores
 import { useAuthStore } from '@/stores/auth';
 import type { Car } from '@/types/Car';
 
@@ -17,13 +18,13 @@ const router = useRouter();
 const authStore = useAuthStore();
 const { createRental, loading: renting } = useRentals();
 const { agencies, fetchAgencies } = useAgencies();
+const { formatCurrency } = useFormatters(); // Helper de moeda
 
 // Estados do Formulário
 const startDate = ref('');
 const endDate = ref('');
 const returnAgencyId = ref<string | null>(null);
 
-// Estado de Controle da Tela (Formulário vs Sucesso)
 const showSuccessScreen = ref(false);
 
 const init = () => {
@@ -46,6 +47,37 @@ const handleClose = () => {
   }, 300);
 };
 
+// --- LÓGICA DE CÁLCULO DE PREÇO (LIVE PRICING) ---
+const bookingSummary = computed(() => {
+  if (!startDate.value || !endDate.value || !props.car) return null;
+
+  const start = new Date(startDate.value);
+  const end = new Date(endDate.value);
+
+  if (end <= start) return null;
+
+  const diffTime = Math.abs(end.getTime() - start.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+  const days = diffDays > 0 ? diffDays : 1;
+
+  const dailyRate = Number(props.car.dailyRate);
+  const subtotal = days * dailyRate;
+
+  const isOneWay = returnAgencyId.value !== props.car.agency.id;
+  const returnFee = isOneWay ? subtotal * 0.30 : 0;
+
+  const total = subtotal + returnFee;
+
+  return {
+    days,
+    dailyRate,
+    subtotal,
+    isOneWay,
+    returnFee,
+    total
+  };
+});
+
 const handleSubmit = async () => {
   if (!props.car || !authStore.user) return;
 
@@ -63,10 +95,8 @@ const handleSubmit = async () => {
     showSuccessScreen.value = true; 
 
   } catch (err) {
-    // Erro já tratado na Store
   }
 };
-
 const goToMyRentals = () => {
   handleClose();
   router.push('/meus-alugueis');
@@ -76,7 +106,6 @@ const isValid = computed(() => {
   return startDate.value && endDate.value && new Date(endDate.value) > new Date(startDate.value);
 });
 
-// Helper para formatar o endereço na lista
 const getFormattedAddress = (agencyId: string) => {
   const agency = agencies.value.find(a => a.id === agencyId);
   if (!agency) return '';
@@ -88,7 +117,7 @@ const getFormattedAddress = (agencyId: string) => {
   <v-dialog 
     :model-value="modelValue" 
     @update:model-value="handleClose"
-    max-width="600"
+    max-width="700"
     @after-enter="init"
     persistent
   >
@@ -96,20 +125,24 @@ const getFormattedAddress = (agencyId: string) => {
       
       <v-window-item :value="false">
         <v-card class="rounded-lg bg-white" v-if="car">
-          <v-card-title class="bg-primary text-white py-4 font-weight-bold d-flex align-center">
-            <v-icon icon="mdi-calendar-check" class="mr-2"></v-icon>
-            Reservar {{ car.model }}
+          <v-card-title class="bg-primary text-white py-4 font-weight-bold d-flex align-center justify-space-between">
+            <div class="d-flex align-center">
+              <v-icon icon="mdi-calendar-check" class="mr-2"></v-icon>
+              Reservar {{ car.model }}
+            </div>
+            <v-btn icon="mdi-close" variant="text" density="compact" @click="handleClose"></v-btn>
           </v-card-title>
           
           <v-card-text class="pt-6 pb-2">
             
             <v-alert icon="mdi-tag-text-outline" variant="tonal" color="info" class="mb-6 text-caption rounded-lg border-info" density="compact">
-              A tarifa diária é <strong>R$ {{ car.dailyRate }}</strong>. 
+              A tarifa diária é <strong>{{ formatCurrency(Number(car.dailyRate)) }}</strong>. 
               Taxa de retorno de 30% aplica-se se devolver em outra cidade.
             </v-alert>
 
             <v-form @submit.prevent="handleSubmit">
               <v-row dense>
+                
                 <v-col cols="12" md="6">
                   <v-text-field
                     v-model="startDate"
@@ -119,8 +152,6 @@ const getFormattedAddress = (agencyId: string) => {
                     density="comfortable"
                     color="primary"
                     bg-color="white"
-                    hint="Quando você vai pegar o carro?"
-                    persistent-hint
                     class="mb-2"
                   ></v-text-field>
                 </v-col>
@@ -133,13 +164,27 @@ const getFormattedAddress = (agencyId: string) => {
                     density="comfortable"
                     color="primary"
                     bg-color="white"
-                    hint="Quando você vai devolver?"
-                    persistent-hint
                     class="mb-2"
                   ></v-text-field>
                 </v-col>
 
-                <v-col cols="12" class="mt-4">
+                <v-col cols="12" md="6">
+                  <v-text-field
+                    :model-value="`${car.agency.name} (${car.agency.city})`"
+                    label="Local de Retirada (Fixo)"
+                    variant="filled" 
+                    readonly
+                    density="comfortable"
+                    prepend-inner-icon="mdi-map-marker-lock"
+                    color="grey-darken-2"
+                    bg-color="grey-lighten-4"
+                    class="mb-2"
+                    hint="O carro deve ser retirado na agência de origem."
+                    persistent-hint
+                  ></v-text-field>
+                </v-col>
+
+                <v-col cols="12" md="6">
                   <v-select
                     v-model="returnAgencyId"
                     :items="agencies"
@@ -162,36 +207,58 @@ const getFormattedAddress = (agencyId: string) => {
                         <template v-slot:subtitle>
                            <span class="text-caption text-grey-darken-1 d-flex align-center mt-1">
                              <v-icon icon="mdi-map-marker-outline" size="x-small" class="mr-1"></v-icon>
-                             {{ item.raw.address }} - {{ item.raw.city }}/{{ item.raw.state }}
+                             {{ item.raw.address }} - {{ item.raw.city }}
                            </span>
                         </template>
                       </v-list-item>
-                    </template>
-
-                    <template v-slot:selection="{ item }">
-                        <div class="d-flex flex-column text-truncate py-1">
-                            <span class="text-body-2 font-weight-bold">{{ item.raw.name }}</span>
-                            <span class="text-caption text-grey-darken-1 text-truncate">
-                                {{ item.raw.address }}
-                            </span>
-                        </div>
                     </template>
                   </v-select>
                 </v-col>
               </v-row>
             </v-form>
 
+            <v-fade-transition>
+              <v-sheet 
+                v-if="bookingSummary" 
+                class="mt-6 bg-grey-lighten-5 rounded-lg pa-4 border"
+              >
+                <div class="text-subtitle-2 font-weight-black mb-3 d-flex align-center">
+                  <v-icon icon="mdi-receipt-text-outline" class="mr-2" size="small"></v-icon>
+                  Resumo de Valores
+                </div>
+
+                <div class="d-flex justify-space-between text-body-2 mb-1">
+                  <span class="text-grey-darken-2">{{ bookingSummary.days }} diárias x {{ formatCurrency(bookingSummary.dailyRate) }}</span>
+                  <span class="font-weight-bold">{{ formatCurrency(bookingSummary.subtotal) }}</span>
+                </div>
+
+                <div v-if="bookingSummary.isOneWay" class="d-flex justify-space-between text-body-2 mb-1 text-orange-darken-2">
+                  <span>Taxa de Retorno (30%)</span>
+                  <span class="font-weight-bold">+ {{ formatCurrency(bookingSummary.returnFee) }}</span>
+                </div>
+
+                <v-divider class="my-3"></v-divider>
+
+                <div class="d-flex justify-space-between align-center">
+                  <span class="text-h6 font-weight-bold text-grey-darken-3">Total Estimado</span>
+                  <span class="text-h5 font-weight-black text-primary">
+                    {{ formatCurrency(bookingSummary.total) }}
+                  </span>
+                </div>
+              </v-sheet>
+            </v-fade-transition>
+
             <v-alert 
               color="orange-darken-2" 
               variant="tonal" 
               icon="mdi-wallet-outline" 
-              class="mt-6 rounded-lg"
+              class="mt-4 rounded-lg"
               border="start"
+              density="compact"
             >
-              <div class="text-subtitle-2 font-weight-bold mb-1">Pagamento no Check-in</div>
-              <div class="text-caption" style="line-height: 1.3;">
-                O pagamento será realizado presencialmente na agência. O veículo será liberado 
-                imediatamente após o check-in e confirmação.
+              <div class="text-caption font-weight-bold">Pagamento no Check-in</div>
+              <div class="text-caption" style="line-height: 1.2;">
+                O pagamento é realizado presencialmente na retirada do veículo.
               </div>
             </v-alert>
 
@@ -206,12 +273,12 @@ const getFormattedAddress = (agencyId: string) => {
               color="primary" 
               variant="flat" 
               :loading="renting" 
-              :disabled="!isValid"
+              :disabled="!isValid || !bookingSummary"
               @click="handleSubmit"
               class="font-weight-bold px-6"
               size="large"
             >
-              CONFIRMAR RESERVA
+              CONFIRMAR ({{ bookingSummary ? formatCurrency(bookingSummary.total) : '---' }})
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -231,15 +298,13 @@ const getFormattedAddress = (agencyId: string) => {
           </div>
 
           <v-sheet border rounded="lg" class="bg-grey-lighten-5 pa-4 mb-6 text-left">
-            <div class="d-flex align-center mb-3">
+             <div class="d-flex align-center mb-3">
               <v-icon icon="mdi-calendar-arrow-right" size="small" class="mr-3 text-primary"></v-icon>
               <span class="text-caption text-grey-darken-1 font-weight-bold text-uppercase">Retirada</span>
               <span class="ml-auto font-weight-bold text-body-2">{{ startDate ? new Date(startDate).toLocaleString('pt-BR') : '-' }}</span>
             </div>
             
-            <v-divider class="mb-3 border-dashed"></v-divider>
-
-            <div class="d-flex align-start">
+            <div class="d-flex align-start mt-3">
               <v-icon icon="mdi-map-marker" size="small" class="mr-3 mt-1 text-primary"></v-icon>
               <div class="flex-grow-1">
                  <span class="text-caption text-grey-darken-1 font-weight-bold text-uppercase d-block mb-1">Local de Retirada</span>
@@ -251,12 +316,6 @@ const getFormattedAddress = (agencyId: string) => {
                  </span>
               </div>
             </div>
-            
-            <div class="mt-4 pt-3 border-t d-flex align-start text-orange-darken-3">
-               <v-icon icon="mdi-information-outline" size="small" class="mr-2 mt-0"></v-icon>
-               <span class="text-caption font-weight-medium">Lembre-se: O pagamento é feito no balcão da agência.</span>
-            </div>
-
           </v-sheet>
 
           <div class="d-flex flex-column ga-3">

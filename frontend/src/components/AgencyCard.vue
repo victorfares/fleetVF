@@ -3,84 +3,72 @@ import type { Agency } from '@/types/Agency';
 
 defineProps<{
   agency: Agency,
-  isPublic?: boolean // <--- Prop para alternar modo
+  isPublic?: boolean
 }>();
 
-// Emitir eventos diferentes dependendo da ação
-defineEmits(['edit', 'view-fleet']); 
+defineEmits(['edit']);
 </script>
 
 <template>
-  <v-card elevation="0" class="h-100 rounded-lg border hover-card bg-white">
-    <v-card-item>
+  <v-card 
+    :to="isPublic ? `/agencias/${agency.id}` : undefined"
+    class="h-100 d-flex flex-column cursor-pointer" 
+    elevation="0" 
+    border
+    hover
+    rounded="xl"
+  >
+    <v-card-item class="pt-4">
       <template v-slot:prepend>
-        <v-avatar color="black" variant="tonal" rounded="lg">
-          <v-icon icon="mdi-office-building"></v-icon>
+        <v-avatar color="grey-lighten-4" rounded="lg" size="48">
+          <v-icon icon="mdi-office-building" color="black" size="24"></v-icon>
         </v-avatar>
       </template>
-      
-      <v-card-title class="text-body-1 font-weight-black text-black">
+
+      <v-card-title class="font-weight-black text-body-1 text-black">
         {{ agency.name }}
       </v-card-title>
-      
-      <v-card-subtitle class="text-caption font-weight-bold text-grey-darken-3">
-        ID: #{{ agency.id.slice(0, 8) }}...
+
+      <v-card-subtitle class="text-caption font-weight-bold text-grey-darken-3 opacity-100 mt-1">
+        {{ agency.city }} - {{ agency.state }}
       </v-card-subtitle>
     </v-card-item>
 
-    <v-divider class="border-opacity-100"></v-divider>
+    <v-divider class="my-2 border-opacity-25"></v-divider>
 
-    <v-card-text class="py-4">
-      <div class="d-flex align-center mb-3">
-        <v-icon icon="mdi-map-marker" size="small" class="mr-3 text-black"></v-icon>
-        <span class="text-body-2 text-black font-weight-bold">
-          {{ agency.city }} - {{ agency.state }}
-        </span>
-      </div>
-
-      <div class="d-flex align-center">
-        <v-icon icon="mdi-home-map-marker" size="small" class="mr-3 text-black"></v-icon>
-        <span class="text-caption text-grey-darken-4 font-weight-medium text-truncate">
+    <v-card-text class="flex-grow-1 py-2">
+      <div class="d-flex align-start ga-3">
+        <v-icon icon="mdi-map-marker-outline" size="small" color="black" class="mt-1"></v-icon>
+        <span class="text-caption text-grey-darken-4 font-weight-medium" style="line-height: 1.5;">
           {{ agency.address }}
         </span>
       </div>
     </v-card-text>
 
-    <v-card-actions class="pa-3 pt-0">
+    <v-card-actions class="pa-4 pt-0">
       <v-btn 
         v-if="isPublic"
         variant="flat" 
-        color="primary"
-        class="font-weight-bold"
+        color="black"
+        class="font-weight-bold text-white"
         block 
-        size="small"
-        @click="$emit('view-fleet', agency)"
+        rounded="lg"
+        :to="`/agencias/${agency.id}`"
       >
         Ver Frota Disponível
       </v-btn>
 
       <v-btn 
         v-else
-        variant="flat" 
-        color="grey-lighten-3"
-        class="text-black font-weight-bold"
+        variant="tonal" 
+        color="grey-darken-4"
+        class="font-weight-bold"
         block 
-        size="small"
-        @click="$emit('edit', agency)"
+        rounded="lg"
+        @click.stop="$emit('edit', agency)"
       >
-        Editar
+        Editar Dados
       </v-btn>
     </v-card-actions>
   </v-card>
 </template>
-
-<style scoped>
-.hover-card {
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.hover-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-  border-color: black !important;
-}
-</style>
