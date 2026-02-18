@@ -11,6 +11,7 @@ import { User } from '../../users/entities/user.entity';
 import { Car } from '../../cars/entities/car.entity';
 import { Agency } from '../../agencies/entities/agency.entity';
 import { RentalStatus } from '../enums/rental-status.enum';
+import { Exclude } from 'class-transformer';
 
 @Entity({ name: 'rentals' })
 export class Rental {
@@ -56,6 +57,7 @@ export class Rental {
   user: User;
 
   @Column({ name: 'user_id' })
+  @Exclude()
   userId: string;
 
   @ManyToOne(() => Car, (car) => car.rentals)
@@ -63,6 +65,7 @@ export class Rental {
   car: Car;
 
   @Column({ name: 'car_id' })
+  @Exclude()
   carId: string;
 
   @ManyToOne(() => Agency)
@@ -70,6 +73,7 @@ export class Rental {
   pickupAgency: Agency;
 
   @Column({ name: 'pickup_agency_id' })
+  @Exclude()
   pickupAgencyId: string;
 
   @ManyToOne(() => Agency)
@@ -77,11 +81,14 @@ export class Rental {
   returnAgency: Agency;
 
   @Column({ name: 'return_agency_id' })
+  @Exclude()
   returnAgencyId: string;
 
   @CreateDateColumn({ name: 'created_at' })
+  @Exclude()
   createdAt: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
+  @Exclude()
   updatedAt: Date;
 }

@@ -12,6 +12,7 @@ import {
 import { Agency } from '../../agencies/entities/agency.entity';
 import { CarStatus } from '../enums/car-status.enum';
 import { Rental } from 'src/modules/rentals/entities/rental.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity({ name: 'cars' })
 export class Car {
@@ -47,9 +48,11 @@ export class Car {
   agencyId: string;
 
   @CreateDateColumn({ name: 'created_at' })
+  @Exclude()
   createdAt: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
+  @Exclude()
   updatedAt: Date;
 
   @ManyToOne(() => Agency, (agency) => agency.cars, {
@@ -60,8 +63,10 @@ export class Car {
   agency: Agency;
 
   @DeleteDateColumn({ name: 'deleted_at' })
+  @Exclude()
   deletedAt?: Date;
 
   @OneToMany(() => Rental, (rental) => rental.car)
+  @Exclude()
   rentals: Rental[];
 }

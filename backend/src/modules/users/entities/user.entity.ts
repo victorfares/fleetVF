@@ -46,5 +46,6 @@ export class User {
   deletedAt: Date;
 
   @OneToMany(() => Rental, (rental) => rental.user)
+  @Exclude()
   rentals: Rental[];
 }

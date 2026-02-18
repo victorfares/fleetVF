@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { Car } from '../../cars/entities/car.entity';
 import { Rental } from 'src/modules/rentals/entities/rental.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity({ name: 'agencies' })
 export class Agency {
@@ -28,20 +29,26 @@ export class Agency {
   address: string;
 
   @CreateDateColumn()
+  @Exclude()
   createdAt: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
+  @Exclude()
   updatedAt: Date;
 
   @OneToMany(() => Car, (car) => car.agency)
+  @Exclude()
   cars: Car[];
 
   @DeleteDateColumn({ name: 'deleted_at' })
+  @Exclude()
   deletedAt?: Date;
 
   @OneToMany(() => Rental, (rental) => rental.pickupAgency)
+  @Exclude()
   pickupRentals: Rental[];
 
   @OneToMany(() => Rental, (rental) => rental.returnAgency)
+  @Exclude()
   returnRentals: Rental[];
 }
