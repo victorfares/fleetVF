@@ -8,8 +8,8 @@ build/
 
 # --- Variáveis de Ambiente  ---
 .env
-.env.*.local
-*.env
+.env.*
+!.env.example
 
 # --- Logs de Erro ---
 npm-debug.log*
