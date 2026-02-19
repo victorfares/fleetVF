@@ -13,6 +13,7 @@ import { UsersModule } from 'src/modules/users/users.module';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { RentalsModule } from 'src/modules/rentals/rentals.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -33,6 +34,12 @@ import { RentalsModule } from 'src/modules/rentals/rentals.module';
         synchronize: configService.get<string>('DB_SYNC') === 'true', // nao usar em producao
       }),
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     AgenciesModule,
     CarsModule,
     AuthModule,
@@ -57,6 +64,10 @@ import { RentalsModule } from 'src/modules/rentals/rentals.module';
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })
