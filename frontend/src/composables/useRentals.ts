@@ -17,25 +17,22 @@ export function useRentals() {
   const filters = ref({
     status: null,
     search: "",
+    userId: null as string | null, 
     startDateMin: null,
     startDateMax: null,
   });
 
   const isLate = (rental: Rental) => {
     const end = new Date(rental.endDate);
-
     if (rental.status === "COMPLETED" && rental.realReturnDate) {
       return new Date(rental.realReturnDate) > end;
     }
-
     if (rental.status === "ACTIVE" || rental.status === "CONFIRMED") {
       return new Date() > end;
     }
-
     return false;
   };
 
-  // Wrapper que adapta as opções do Vuetify para os Params da API
   const fetchRentals = async (options: any = {}) => {
     const { page = 1, itemsPerPage = 10, sortBy = [] } = options;
 
@@ -44,6 +41,7 @@ export function useRentals() {
       offset: (page - 1) * itemsPerPage,
       search: filters.value.search || undefined,
       status: filters.value.status || undefined,
+      userId: filters.value.userId || undefined,
       startDateMin: filters.value.startDateMin || undefined,
       startDateMax: filters.value.startDateMax || undefined,
     };
@@ -62,12 +60,10 @@ export function useRentals() {
     loading,
     error,
     filters,
-
     fetchRentals,
     createRental: store.createRental,
     checkIn: store.checkIn,
     finalizeRental: store.finalizeRental,
-
     isLate,
     formatCurrency,
     formatDate,

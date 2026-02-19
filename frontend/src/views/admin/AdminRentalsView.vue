@@ -1,51 +1,58 @@
 <script setup lang="ts">
-import { watch, nextTick } from 'vue';
+import { watch, nextTick, onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
 import { useRentals } from '@/composables/useRentals';
-import { useRentalsTable } from '@/composables/useRentalsTable'; // <--- Novo import
+import { useRentalsTable } from '@/composables/useRentalsTable';
 import { useFormatters } from '@/composables/useFormatters';
 import RentalDetailsExpanded from '@/components/RentalDetailsExpanded.vue';
 import FinalizeRentalDialog from '@/components/FinalizeRentalDialog.vue';
 
-// 1. Lógica de Negócio (API)
-const { rentals, loading, totalItems, filters, fetchRentals, checkIn, finalizeRental, isLate } = useRentals();
-const { formatCurrency, formatRentalStatus, getRentalStatusColor } = useFormatters();
+const route = useRoute();
 
-// 2. Configuração da Tabela (Visual)
+const { rentals, loading, totalItems, filters, fetchRentals, checkIn, finalizeRental, isLate } = useRentals();
+const { formatRentalStatus, getRentalStatusColor } = useFormatters();
 const { headers, statusOptions, itemsPerPage, currentPage, expanded, search } = useRentalsTable();
 
-// 3. Estados Locais de Ação
-import { ref } from 'vue'; // Import ref aqui se não estiver auto-importado
 const showFinalizeDialog = ref(false);
 const rentalToFinalize = ref<any>(null);
 const confirmLoading = ref(false);
 const processingId = ref<string | null>(null);
 
-// --- Métodos de Controle ---
 
+onMounted(() => {
+  if (route.query.userId || route.query.search) {
+    if (route.query.userId) filters.value.userId = route.query.userId as string;
+    
+    if (route.query.search) {
+      search.value = route.query.search as string;
+      filters.value.search = route.query.search as string;
+    }
+  }
+});
+
+// --- Métodos de Controle ---
 const handleTableUpdate = async ({ page, itemsPerPage, sortBy }: any) => {
   currentPage.value = page;
   await fetchRentals({ page, itemsPerPage, sortBy });
 };
 
-// Atualiza ao mudar filtro de status
 watch(() => filters.value.status, () => {
   currentPage.value = 1;
   fetchRentals({ page: 1, itemsPerPage: itemsPerPage.value });
 });
 
-// Debounce da busca
 let searchTimeout: any = null;
 const onSearchInput = () => {
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
-    filters.value.search = search.value; // Atualiza o filtro da API
+    if (!search.value) filters.value.userId = null;
+    filters.value.search = search.value;
     currentPage.value = 1;
     fetchRentals({ page: 1, itemsPerPage: itemsPerPage.value });
   }, 600);
 };
 
 // --- Ações de Negócio ---
-
 const handleCheckIn = async (rental: any) => {
   if (!confirm(`Confirmar entrega para ${rental.user?.name}?`)) return;
   processingId.value = rental.id;
@@ -83,7 +90,19 @@ const onFinalizeConfirm = async (mileage: number) => {
 
 <template>
   <v-container fluid class="py-8">
-    <h1 class="text-h4 font-weight-black text-black mb-6">Gestão de Reservas</h1>
+    <div class="d-flex justify-space-between align-center mb-6">
+       <h1 class="text-h4 font-weight-black text-black">Gestão de Reservas</h1>
+       <v-btn 
+          v-if="filters.userId" 
+          color="error" 
+          variant="tonal" 
+          class="font-weight-black"
+          prepend-icon="mdi-filter-remove"
+          @click="() => { search = ''; filters.userId = null; onSearchInput() }"
+        >
+          Remover Filtro de Usuário
+        </v-btn>
+    </div>
 
     <v-card class="mb-6 rounded-lg border bg-white" elevation="0">
       <v-card-text>
@@ -96,10 +115,9 @@ const onFinalizeConfirm = async (mileage: number) => {
               variant="outlined"
               density="compact"
               hide-details
-              bg-color="white"
+              bg-color="grey-lighten-5"
               clearable
-              color="primary"
-              base-color="black"
+              class="font-weight-bold text-black"
             ></v-select>
           </v-col>
 
@@ -111,9 +129,8 @@ const onFinalizeConfirm = async (mileage: number) => {
               variant="outlined"
               density="compact"
               hide-details
-              bg-color="white"
-              color="primary"
-              base-color="black"
+              bg-color="grey-lighten-5"
+              class="font-weight-bold text-black"
               @input="onSearchInput"
             ></v-text-field>
           </v-col>
@@ -122,11 +139,11 @@ const onFinalizeConfirm = async (mileage: number) => {
              <v-btn 
                 color="black" 
                 variant="flat" 
-                class="font-weight-bold text-white w-100"
+                class="font-weight-black text-white w-100"
                 prepend-icon="mdi-refresh"
                 @click="fetchRentals({ page: currentPage, itemsPerPage })"
              >
-                Atualizar
+                ATUALIZAR
              </v-btn>
           </v-col>
         </v-row>
@@ -149,14 +166,14 @@ const onFinalizeConfirm = async (mileage: number) => {
     >
       <template v-slot:item.user.name="{ item }">
         <div class="d-flex align-center py-2">
-           <v-avatar color="grey-lighten-4" size="36" class="mr-3 border">
+           <v-avatar color="grey-lighten-3" size="36" class="mr-3 border">
              <span class="font-weight-black text-black text-body-2">{{ item.user?.name?.charAt(0) || '?' }}</span>
            </v-avatar>
            <div style="max-width: 180px;">
-             <div class="font-weight-bold text-body-2 text-black text-truncate" :title="item.user?.name">
+             <div class="font-weight-black text-body-2 text-black text-truncate" :title="item.user?.name">
                {{ item.user?.name || '---' }}
              </div>
-             <div class="text-caption text-grey-darken-1 text-truncate" :title="item.user?.email">
+             <div class="text-caption font-weight-bold text-grey-darken-2 text-truncate" :title="item.user?.email">
                {{ item.user?.email }}
              </div>
            </div>
@@ -164,20 +181,20 @@ const onFinalizeConfirm = async (mileage: number) => {
       </template>
 
       <template v-slot:item.car.model="{ item }">
-         <div class="font-weight-bold text-black text-truncate" :title="item.car?.model">
+         <div class="font-weight-black text-black text-truncate" :title="item.car?.model">
             {{ item.car?.model || '---' }}
          </div>
-         <v-chip size="x-small" variant="outlined" color="grey-darken-4" class="font-weight-bold mt-1">
+         <v-chip size="x-small" variant="flat" color="black" class="font-weight-black mt-1">
             {{ item.car?.licensePlate || '---' }}
          </v-chip>
       </template>
 
       <template v-slot:item.startDate="{ item }">
          <div class="d-flex flex-column">
-             <span class="text-body-2 font-weight-bold text-black">
+             <span class="text-body-2 font-weight-black text-black">
                 {{ new Date(item.startDate).toLocaleDateString('pt-BR') }}
              </span>
-             <span class="text-caption text-grey-darken-1">
+             <span class="text-caption font-weight-bold text-grey-darken-2">
                 {{ new Date(item.startDate).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}) }}
              </span>
          </div>
@@ -185,16 +202,16 @@ const onFinalizeConfirm = async (mileage: number) => {
 
       <template v-slot:item.endDate="{ item }">
         <div class="d-flex flex-column">
-             <span class="text-body-2 font-weight-bold" :class="isLate(item) ? 'text-red-darken-3' : 'text-black'">
+             <span class="text-body-2 font-weight-black" :class="isLate(item) ? 'text-red-darken-4' : 'text-black'">
                 {{ new Date(item.endDate).toLocaleDateString('pt-BR') }}
              </span>
              <div class="d-flex align-center">
-                <span class="text-caption text-grey-darken-1">
+                <span class="text-caption font-weight-bold text-grey-darken-2">
                     {{ new Date(item.endDate).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}) }}
                 </span>
                 <v-tooltip location="top" v-if="isLate(item)">
                     <template v-slot:activator="{ props }">
-                    <v-icon v-bind="props" icon="mdi-alert-circle" color="error" size="x-small" class="ml-1"></v-icon>
+                    <v-icon v-bind="props" icon="mdi-alert-circle" color="error" size="small" class="ml-1"></v-icon>
                     </template>
                     <span class="font-weight-bold">Devolução atrasada!</span>
                 </v-tooltip>
@@ -204,10 +221,10 @@ const onFinalizeConfirm = async (mileage: number) => {
 
       <template v-slot:item.pickupAgency.name="{ item }">
          <div class="d-flex flex-column" style="max-width: 180px;">
-             <span class="text-body-2 font-weight-bold text-black text-truncate" :title="item.pickupAgency?.name">
+             <span class="text-body-2 font-weight-black text-black text-truncate" :title="item.pickupAgency?.name">
                 {{ item.pickupAgency?.name || '---' }}
              </span>
-             <span class="text-caption text-grey-darken-1 text-truncate">
+             <span class="text-caption font-weight-bold text-grey-darken-2 text-truncate">
                 {{ item.pickupAgency?.city }} - {{ item.pickupAgency?.state }}
              </span>
          </div>
@@ -215,10 +232,10 @@ const onFinalizeConfirm = async (mileage: number) => {
 
       <template v-slot:item.returnAgency.name="{ item }">
          <div class="d-flex flex-column" style="max-width: 180px;">
-             <span class="text-body-2 font-weight-bold text-black text-truncate" :title="item.returnAgency?.name">
+             <span class="text-body-2 font-weight-black text-black text-truncate" :title="item.returnAgency?.name">
                 {{ item.returnAgency?.name || '---' }}
              </span>
-             <span class="text-caption text-grey-darken-1 text-truncate">
+             <span class="text-caption font-weight-bold text-grey-darken-2 text-truncate">
                 {{ item.returnAgency?.city }} - {{ item.returnAgency?.state }}
              </span>
          </div>
@@ -228,8 +245,7 @@ const onFinalizeConfirm = async (mileage: number) => {
         <v-chip
           :color="getRentalStatusColor(item.status)"
           size="small"
-          label
-          variant="tonal"
+          variant="flat"
           class="font-weight-black text-uppercase"
         >
           {{ formatRentalStatus(item.status) }}
@@ -237,27 +253,27 @@ const onFinalizeConfirm = async (mileage: number) => {
       </template>
 
       <template v-slot:item.actions="{ item }">
-         <div class="d-flex justify-end">
+         <div class="d-flex justify-end gap-2">
             <v-btn 
               v-if="item.status === 'CONFIRMED'" 
               color="success" 
               size="small" 
               variant="flat" 
-              class="font-weight-bold px-3"
+              class="font-weight-black px-4"
               :loading="processingId === item.id" 
               @click.stop="handleCheckIn(item)"
             >
-              Entregar
+              ENTREGAR VEÍCULO
             </v-btn>
             <v-btn 
               v-if="item.status === 'ACTIVE'" 
               color="primary" 
               size="small" 
               variant="flat" 
-              class="font-weight-bold px-3"
+              class="font-weight-black px-4"
               @click.stop="openFinalize(item)"
             >
-              Receber
+              RECEBER VEÍCULO
             </v-btn>
          </div>
       </template>
