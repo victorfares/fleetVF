@@ -8,19 +8,25 @@ import { UpdateAgencyDto } from './dto/update-agency.dto';
 import { Agency } from './entities/agency.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { plainToInstance } from 'class-transformer';
 import { PaginationDto } from '../../common/dto/pagination.dto';
-
+import { AgencyResponseDto } from './dto/agency-response.dto';
 @Injectable()
 export class AgenciesService {
   constructor(
     @InjectRepository(Agency)
     private readonly agencyRepository: Repository<Agency>,
   ) {}
-
+  private mapToDto(entity: Agency | Agency[]): any {
+    return plainToInstance(AgencyResponseDto, entity, {
+      excludeExtraneousValues: true,
+    });
+  }
   async create(createAgencyDto: CreateAgencyDto) {
     const agency = this.agencyRepository.create(createAgencyDto);
 
-    return this.agencyRepository.save(agency);
+    const savedAgency = await this.agencyRepository.save(agency);
+    return this.mapToDto(savedAgency);
   }
 
   async findAll(paginationDto?: PaginationDto) {
@@ -32,7 +38,7 @@ export class AgenciesService {
     });
 
     return {
-      data: results,
+      data: this.mapToDto(results),
       count: total,
       limit,
       offset,
@@ -48,7 +54,7 @@ export class AgenciesService {
     if (!agency) {
       throw new NotFoundException(`Agência com ID #${id} não encontrada`);
     }
-    return agency;
+    return this.mapToDto(agency);
   }
 
   async update(id: string, updateAgencyDto: UpdateAgencyDto) {
@@ -59,7 +65,8 @@ export class AgenciesService {
     if (!agency) {
       throw new NotFoundException(`Agência com ID #${id} não encontrada`);
     }
-    return this.agencyRepository.save(agency);
+    const savedAgency = await this.agencyRepository.save(agency);
+    return this.mapToDto(savedAgency);
   }
 
   async remove(id: string) {
@@ -75,6 +82,7 @@ export class AgenciesService {
         `Não é possível remover a agência "${agency.name}" pois ela possui ${agency.cars.length} carros vinculados. Mova os carros ou delete-os primeiro.`,
       );
     }
-    return this.agencyRepository.softRemove(agency);
+    const removedAgency = await this.agencyRepository.softRemove(agency);
+    return this.mapToDto(removedAgency);
   }
 }

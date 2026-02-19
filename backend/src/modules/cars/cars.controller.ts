@@ -16,6 +16,7 @@ import { FindCarsDto } from './dto/find-cars.dto';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { UserRole } from '../users/enums/user-role.enum';
 import { IsPublic } from 'src/common/decorators/is-public.decorator';
+import { CarResponseDto } from './dto/car-response.dto';
 
 @Controller('cars')
 export class CarsController {
@@ -23,7 +24,7 @@ export class CarsController {
 
   @Post()
   @Roles(UserRole.ADMIN)
-  create(@Body() createCarDto: CreateCarDto) {
+  create(@Body() createCarDto: CreateCarDto): Promise<CarResponseDto> {
     return this.carsService.create(createCarDto);
   }
 
@@ -35,7 +36,7 @@ export class CarsController {
 
   @IsPublic()
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<CarResponseDto> {
     return this.carsService.findOne(id);
   }
 
@@ -44,7 +45,7 @@ export class CarsController {
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateCarDto: UpdateCarDto,
-  ) {
+  ): Promise<CarResponseDto> {
     return this.carsService.update(id, updateCarDto);
   }
 

@@ -5,11 +5,13 @@ import {
 } from '@nestjs/common';
 import { CreateCarDto } from './dto/create-car.dto';
 import { UpdateCarDto } from './dto/update-car.dto';
+import { plainToInstance } from 'class-transformer';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Car } from './entities/car.entity';
 import { Repository, ILike, FindOptionsWhere } from 'typeorm';
 import { AgenciesService } from '../agencies/agencies.service';
 import { FindCarsDto } from './dto/find-cars.dto';
+import { CarResponseDto } from './dto/car-response.dto';
 
 @Injectable()
 export class CarsService {
@@ -18,6 +20,12 @@ export class CarsService {
     private readonly carRepository: Repository<Car>,
     private readonly agenciesService: AgenciesService,
   ) {}
+
+  private mapToDto(entity: Car | Car[]): any {
+    return plainToInstance(CarResponseDto, entity, {
+      excludeExtraneousValues: true, // Só retorna o que tiver @Expose no DTO
+    });
+  }
   async create(createCarDto: CreateCarDto) {
     const { agencyId, ...carData } = createCarDto;
     const agency = await this.agenciesService.findOne(agencyId);
@@ -25,7 +33,8 @@ export class CarsService {
       ...carData,
       agency,
     });
-    return await this.carRepository.save(car);
+    const savedCar = await this.carRepository.save(car);
+    return this.mapToDto(savedCar);
   }
 
   async findAll(findCarsDto: FindCarsDto) {
@@ -61,7 +70,7 @@ export class CarsService {
     });
 
     return {
-      data: results,
+      data: this.mapToDto(results),
       count: total,
       limit,
       offset,
@@ -78,11 +87,14 @@ export class CarsService {
       throw new NotFoundException(`Carro com ID #${id} não encontrado`);
     }
 
-    return car;
+    return this.mapToDto(car);
   }
 
   async update(id: string, updateCarDto: UpdateCarDto) {
-    const currentCar = await this.findOne(id);
+    const currentCar = await this.carRepository.findOne({ where: { id } });
+    if (!currentCar) {
+      throw new NotFoundException(`Carro com ID #${id} não encontrado`);
+    }
     if (
       updateCarDto.currentMileage !== undefined &&
       updateCarDto.currentMileage < currentCar.currentMileage
@@ -105,11 +117,16 @@ export class CarsService {
       throw new NotFoundException(`Carro com ID #${id} não encontrado`);
     }
 
-    return this.carRepository.save(carToSave);
+    const savedCar = await this.carRepository.save(carToSave);
+    return this.mapToDto(savedCar);
   }
 
   async remove(id: string) {
-    const car = await this.findOne(id);
-    return this.carRepository.softRemove(car);
+    const car = await this.carRepository.findOne({ where: { id } });
+    if (!car) {
+      throw new NotFoundException(`Carro com ID #${id} não encontrado`);
+    }
+    await this.carRepository.softRemove(car);
+    return { message: 'Carro removido com sucesso' };
   }
 }

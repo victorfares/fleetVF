@@ -5,10 +5,12 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { plainToInstance } from 'class-transformer';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { HashingServiceProtocol } from '../../auth/hashing/hashing.service';
+import { UserResponseDto } from './dto/response-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -17,6 +19,12 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
     private readonly hashingService: HashingServiceProtocol,
   ) {}
+
+  private mapToDto(entity: User | User[]): any {
+    return plainToInstance(UserResponseDto, entity, {
+      excludeExtraneousValues: true,
+    });
+  }
   async create(createUserDto: CreateUserDto) {
     const existingUser = await this.userRepository.findOne({
       where: { email: createUserDto.email },
@@ -35,11 +43,13 @@ export class UsersService {
       password: hashedPassword,
     });
 
-    return await this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+    return this.mapToDto(savedUser);
   }
 
   async findAll() {
-    return await this.userRepository.find();
+    const users = await this.userRepository.find();
+    return this.mapToDto(users);
   }
 
   async findOne(id: string) {
@@ -47,7 +57,7 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException(`Usuário com ID ${id} não encontrado.`);
     }
-    return user;
+    return this.mapToDto(user);
   }
 
   async findByEmailForAuth(email: string) {
@@ -65,7 +75,10 @@ export class UsersService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    const user = await this.findOne(id);
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`Usuário com ID ${id} não encontrado`);
+    }
 
     if (updateUserDto.email && updateUserDto.email !== user.email) {
       const emailExists = await this.userRepository.findOne({
@@ -84,11 +97,18 @@ export class UsersService {
     if (!updatedUser) {
       throw new NotFoundException(`Usuário com ID ${id} não encontrado`);
     }
-    return await this.userRepository.save(updatedUser);
+    const savedUser = await this.userRepository.save(updatedUser);
+    return this.mapToDto(savedUser);
   }
 
   async remove(id: string) {
-    const user = await this.findOne(id);
-    return await this.userRepository.softRemove(user);
+    const user = await this.userRepository.findOne({ where: { id } });
+
+    if (!user) {
+      throw new NotFoundException(`Usuário com ID ${id} não encontrado`);
+    }
+
+    await this.userRepository.softRemove(user);
+    return { message: 'Usuário removido com sucesso' };
   }
 }
