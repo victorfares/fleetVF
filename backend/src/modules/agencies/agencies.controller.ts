@@ -17,6 +17,8 @@ import { Roles } from 'src/common/decorators/roles.decorator';
 import { UserRole } from '../users/enums/user-role.enum';
 import { IsPublic } from 'src/common/decorators/is-public.decorator';
 import { AgencyResponseDto } from './dto/agency-response.dto';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { User } from '../users/entities/user.entity';
 
 @ApiTags('Agencies')
 @Controller('agencies')
@@ -27,8 +29,11 @@ export class AgenciesController {
   @Post()
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Cria uma nova agência' })
-  create(@Body() createAgencyDto: CreateAgencyDto): Promise<AgencyResponseDto> {
-    return this.agenciesService.create(createAgencyDto);
+  create(
+    @Body() createAgencyDto: CreateAgencyDto,
+    @CurrentUser() user: User,
+  ): Promise<AgencyResponseDto> {
+    return this.agenciesService.create(createAgencyDto, user);
   }
 
   @IsPublic()
@@ -50,14 +55,18 @@ export class AgenciesController {
   update(
     @Param('id') id: string,
     @Body() updateAgencyDto: UpdateAgencyDto,
+    @CurrentUser() user: User,
   ): Promise<AgencyResponseDto> {
-    return this.agenciesService.update(id, updateAgencyDto);
+    return this.agenciesService.update(id, updateAgencyDto, user);
   }
 
   @Delete(':id')
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Remove uma agência (Soft Delete)' })
-  remove(@Param('id') id: string): Promise<AgencyResponseDto> {
-    return this.agenciesService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+  ): Promise<AgencyResponseDto> {
+    return this.agenciesService.remove(id, user);
   }
 }

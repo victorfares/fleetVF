@@ -8,6 +8,7 @@ import { Rental } from './entities/rental.entity';
 import { CarsModule } from '../cars/cars.module';
 import { UsersModule } from '../users/users.module';
 import { AgenciesModule } from '../agencies/agencies.module';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { AgenciesModule } from '../agencies/agencies.module';
     CarsModule,
     UsersModule,
     AgenciesModule,
+    AuditModule,
   ],
   controllers: [RentalsController],
   providers: [RentalsService],

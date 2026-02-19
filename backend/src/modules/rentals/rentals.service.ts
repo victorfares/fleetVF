@@ -29,6 +29,8 @@ import { User } from '../users/entities/user.entity';
 import { Agency } from '../agencies/entities/agency.entity';
 import { FindRentalsDto } from './dto/find-rentals.dto';
 import { UserRole } from '../users/enums/user-role.enum';
+import { AuditService } from '../audit/audit.service';
+import { AuditAction } from '../audit/enums/audit-action.enum';
 
 @Injectable()
 export class RentalsService {
@@ -36,9 +38,10 @@ export class RentalsService {
     @InjectRepository(Rental)
     private readonly rentalRepository: Repository<Rental>,
     private readonly dataSource: DataSource,
+    private readonly auditService: AuditService, // Injetando o serviço de auditoria
   ) {}
 
-  async create(createRentalDto: CreateRentalDto) {
+  async create(createRentalDto: CreateRentalDto, currentUser: User) {
     const {
       userId,
       carId,
@@ -145,6 +148,16 @@ export class RentalsService {
 
       const savedRental = await manager.save(rental);
       await queryRunner.commitTransaction();
+
+      await this.auditService.logAction(
+        currentUser,
+        AuditAction.CREATE,
+        'Rental',
+        savedRental.id,
+        null,
+        savedRental,
+      );
+
       return savedRental;
     } catch (err) {
       await queryRunner.rollbackTransaction();
@@ -171,7 +184,7 @@ export class RentalsService {
       orderDirection,
       startDateMin,
       startDateMax,
-      search, // Recebe o termo de busca
+      search,
     } = dto;
 
     const query = this.rentalRepository.createQueryBuilder('rental');
@@ -181,7 +194,6 @@ export class RentalsService {
     query.leftJoinAndSelect('rental.pickupAgency', 'pickupAgency');
     query.leftJoinAndSelect('rental.returnAgency', 'returnAgency');
 
-    // 1. Filtro de Segurança (Admin/Manager vs Usuário Comum)
     const isAdminOrManager =
       currentUser.role === UserRole.ADMIN ||
       currentUser.role === UserRole.MANAGER;
@@ -191,18 +203,15 @@ export class RentalsService {
         currentUserId: currentUser.id,
       });
     } else {
-      // Se for Admin e quiser filtrar por um usuário específico
       if (userId) {
         query.andWhere('rental.userId = :userId', { userId });
       }
     }
 
-    // 2. Filtro de Status
     if (status) {
       query.andWhere('rental.status = :status', { status });
     }
 
-    // 3. Filtro de Data (Range)
     if (startDateMin) {
       query.andWhere('rental.startDate >= :startDateMin', { startDateMin });
     }
@@ -210,8 +219,6 @@ export class RentalsService {
       query.andWhere('rental.startDate <= :startDateMax', { startDateMax });
     }
 
-    // 4. LÓGICA DE BUSCA TEXTUAL (Search)
-    // Usa Brackets para isolar o OR: (nome OU email OU placa OU modelo)
     if (search) {
       query.andWhere(
         new Brackets((qb) => {
@@ -225,7 +232,6 @@ export class RentalsService {
       );
     }
 
-    // 5. Ordenação
     const allowedSortFields = [
       'createdAt',
       'startDate',
@@ -234,14 +240,11 @@ export class RentalsService {
       'status',
     ];
 
-    // Garante que o campo de ordenação é válido
     const sortField = allowedSortFields.includes(orderBy)
       ? `rental.${orderBy}`
       : 'rental.createdAt';
 
     query.orderBy(sortField, orderDirection || 'DESC');
-
-    // 6. Paginação
     query.take(limit);
     query.skip(offset);
 
@@ -278,18 +281,39 @@ export class RentalsService {
     return rental;
   }
 
-  async update(id: string, updateRentalDto: UpdateRentalDto) {
+  async update(
+    id: string,
+    updateRentalDto: UpdateRentalDto,
+    currentUser: User,
+  ) {
     const rental = await this.findOne(id);
 
     if (updateRentalDto.status === RentalStatus.COMPLETED) {
-      return this.finalizeRental(rental, updateRentalDto);
+      return this.finalizeRental(rental, updateRentalDto, currentUser);
     }
 
+    const oldRental = { ...rental };
+
     Object.assign(rental, updateRentalDto);
-    return this.rentalRepository.save(rental);
+    const savedRental = await this.rentalRepository.save(rental);
+
+    await this.auditService.logAction(
+      currentUser,
+      AuditAction.UPDATE,
+      'Rental',
+      savedRental.id,
+      oldRental,
+      savedRental,
+    );
+
+    return savedRental;
   }
 
-  private async finalizeRental(rental: Rental, dto: UpdateRentalDto) {
+  private async finalizeRental(
+    rental: Rental,
+    dto: UpdateRentalDto,
+    currentUser: User,
+  ) {
     if (rental.status === RentalStatus.COMPLETED) {
       throw new BadRequestException('Esta reserva já foi finalizada.');
     }
@@ -304,7 +328,9 @@ export class RentalsService {
       );
     }
 
+    const oldRental = { ...rental };
     const queryRunner = this.dataSource.createQueryRunner();
+
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
@@ -355,6 +381,16 @@ export class RentalsService {
       const savedRental = await queryRunner.manager.save(rental);
 
       await queryRunner.commitTransaction();
+
+      await this.auditService.logAction(
+        currentUser,
+        AuditAction.FINALIZE,
+        'Rental',
+        savedRental.id,
+        oldRental,
+        savedRental,
+      );
+
       return savedRental;
     } catch (err) {
       await queryRunner.rollbackTransaction();
@@ -371,7 +407,7 @@ export class RentalsService {
     }
   }
 
-  async checkIn(id: string) {
+  async checkIn(id: string, currentUser: User) {
     const rental = await this.findOne(id);
 
     if (rental.status !== RentalStatus.CONFIRMED) {
@@ -380,7 +416,9 @@ export class RentalsService {
       );
     }
 
+    const oldRental = { ...rental }; 
     const queryRunner = this.dataSource.createQueryRunner();
+
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
@@ -393,7 +431,19 @@ export class RentalsService {
       await queryRunner.manager.save(rental);
 
       await queryRunner.commitTransaction();
-      return await this.findOne(rental.id);
+
+      const savedRental = await this.findOne(rental.id);
+
+      await this.auditService.logAction(
+        currentUser,
+        AuditAction.CHECK_IN,
+        'Rental',
+        savedRental.id,
+        oldRental,
+        savedRental,
+      );
+
+      return savedRental;
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException(
@@ -405,13 +455,26 @@ export class RentalsService {
     }
   }
 
-  async remove(id: string) {
+  async remove(id: string, currentUser: User) {
     const rental = await this.findOne(id);
     if (rental.status === RentalStatus.ACTIVE) {
       throw new BadRequestException(
         'Não é possível excluir um aluguel em andamento.',
       );
     }
-    return this.rentalRepository.remove(rental);
+
+    const oldRental = { ...rental };
+    await this.rentalRepository.remove(rental);
+
+    await this.auditService.logAction(
+      currentUser,
+      AuditAction.DELETE,
+      'Rental',
+      id,
+      oldRental,
+      null,
+    );
+
+    return { message: 'Reserva removida com sucesso' };
   }
 }
