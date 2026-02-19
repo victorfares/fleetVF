@@ -4,13 +4,14 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { HashingServiceProtocol } from '../../auth/hashing/hashing.service';
 import { UserResponseDto } from './dto/response-user.dto';
+import { FindUsersDto } from './dto/find-users.dto';
 
 @Injectable()
 export class UsersService {
@@ -47,9 +48,38 @@ export class UsersService {
     return this.mapToDto(savedUser);
   }
 
-  async findAll() {
-    const users = await this.userRepository.find();
-    return this.mapToDto(users);
+  async findAll(queryDto: FindUsersDto) {
+    const { limit = 10, offset = 0, search, role } = queryDto;
+
+    const query = this.userRepository.createQueryBuilder('user');
+
+    if (search) {
+      query.andWhere(
+        new Brackets((qb) => {
+          qb.where('user.name ILIKE :search', {
+            search: `%${search}%`,
+          }).orWhere('user.email ILIKE :search', { search: `%${search}%` });
+        }),
+      );
+    }
+
+    if (role) {
+      query.andWhere('user.role = :role', { role });
+    }
+
+    query.orderBy('user.createdAt', 'DESC');
+
+    query.take(limit);
+    query.skip(offset);
+
+    const [results, total] = await query.getManyAndCount();
+
+    return {
+      data: this.mapToDto(results),
+      count: total,
+      limit,
+      offset,
+    };
   }
 
   async findOne(id: string) {

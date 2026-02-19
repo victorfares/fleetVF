@@ -25,5 +25,6 @@ declare module 'vue' {
     RentalDetailsExplained: typeof import('./components/RentalDetailsExplained.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    UserFormDialog: typeof import('./components/UserFormDialog.vue')['default']
   }
 }

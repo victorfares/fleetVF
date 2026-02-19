@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   ParseUUIDPipe,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -17,6 +18,7 @@ import { UserRole } from './enums/user-role.enum';
 import { User } from './entities/user.entity';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { UserResponseDto } from './dto/response-user.dto';
+import { FindUsersDto } from './dto/find-users.dto';
 
 @ApiBearerAuth('access-token')
 @Controller('users')
@@ -39,8 +41,8 @@ export class UsersController {
   @Get()
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Lista todos os usuários' })
-  findAll(): Promise<UserResponseDto[]> {
-    return this.usersService.findAll();
+  findAll(@Query() query: FindUsersDto) {
+    return this.usersService.findAll(query);
   }
 
   @Get(':id')
