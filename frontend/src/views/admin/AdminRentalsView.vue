@@ -1,103 +1,89 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { watch, nextTick } from 'vue';
 import { useRentals } from '@/composables/useRentals';
+import { useRentalsTable } from '@/composables/useRentalsTable'; // <--- Novo import
 import { useFormatters } from '@/composables/useFormatters';
+import RentalDetailsExpanded from '@/components/RentalDetailsExpanded.vue';
+import FinalizeRentalDialog from '@/components/FinalizeRentalDialog.vue';
 
-const { 
-  rentals, 
-  loading, 
-  totalItems, 
-  filters, 
-  fetchRentals, 
-  checkIn, 
-  finalizeRental,
-  isLate 
-} = useRentals();
+// 1. Lógica de Negócio (API)
+const { rentals, loading, totalItems, filters, fetchRentals, checkIn, finalizeRental, isLate } = useRentals();
+const { formatCurrency, formatRentalStatus, getRentalStatusColor } = useFormatters();
 
-const { 
-  formatCurrency, 
-  formatDate, 
-  formatRentalStatus, 
-  getRentalStatusColor 
-} = useFormatters();
+// 2. Configuração da Tabela (Visual)
+const { headers, statusOptions, itemsPerPage, currentPage, expanded, search } = useRentalsTable();
 
-// Configuração da Tabela
-const itemsPerPage = ref(10);
-const expanded = ref([]);
-
-const headers = [
-  { title: 'Cliente', key: 'user.name', sortable: false },
-  { title: 'Veículo', key: 'car.model', sortable: false },
-  { title: 'Retirada', key: 'startDate', sortable: true },
-  { title: 'Devolução', key: 'endDate', sortable: true },
-  { title: 'Status', key: 'status', sortable: true },
-  { title: 'Valor Est.', key: 'totalValue', sortable: true },
-  { title: 'Ações', key: 'actions', sortable: false, align: 'end' },
-];
-
-const statusOptions = [
-  { title: 'Todos', value: null },
-  { title: 'Confirmados', value: 'CONFIRMED' },
-  { title: 'Ativos (Em Andamento)', value: 'ACTIVE' },
-  { title: 'Finalizados', value: 'COMPLETED' },
-  { title: 'Cancelados', value: 'CANCELLED' },
-];
-
-// Dialogs
+// 3. Estados Locais de Ação
+import { ref } from 'vue'; // Import ref aqui se não estiver auto-importado
 const showFinalizeDialog = ref(false);
 const rentalToFinalize = ref<any>(null);
-const endMileage = ref<number | null>(null);
 const confirmLoading = ref(false);
+const processingId = ref<string | null>(null);
 
-// Ações
+// --- Métodos de Controle ---
+
 const handleTableUpdate = async ({ page, itemsPerPage, sortBy }: any) => {
+  currentPage.value = page;
   await fetchRentals({ page, itemsPerPage, sortBy });
 };
 
-watch(() => [filters.value.status, filters.value.search], () => {
+// Atualiza ao mudar filtro de status
+watch(() => filters.value.status, () => {
+  currentPage.value = 1;
   fetchRentals({ page: 1, itemsPerPage: itemsPerPage.value });
 });
 
+// Debounce da busca
+let searchTimeout: any = null;
+const onSearchInput = () => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    filters.value.search = search.value; // Atualiza o filtro da API
+    currentPage.value = 1;
+    fetchRentals({ page: 1, itemsPerPage: itemsPerPage.value });
+  }, 600);
+};
+
+// --- Ações de Negócio ---
+
 const handleCheckIn = async (rental: any) => {
-  if (!confirm(`Confirmar entrega do veículo para ${rental.user.name}?`)) return;
+  if (!confirm(`Confirmar entrega para ${rental.user?.name}?`)) return;
+  processingId.value = rental.id;
   try {
     await checkIn(rental.id);
-    fetchRentals({ page: 1, itemsPerPage: itemsPerPage.value });
-  } catch (e) {
-    alert('Erro ao realizar check-in');
+    await fetchRentals({ page: currentPage.value, itemsPerPage: itemsPerPage.value });
+  } finally {
+    processingId.value = null;
   }
 };
 
 const openFinalize = (rental: any) => {
-  rentalToFinalize.value = rental;
-  endMileage.value = rental.car.currentMileage;
+  rentalToFinalize.value = JSON.parse(JSON.stringify(rental));
   showFinalizeDialog.value = true;
 };
 
-const handleFinalize = async () => {
-  if (!rentalToFinalize.value || !endMileage.value) return;
+const onFinalizeConfirm = async (mileage: number) => {
   confirmLoading.value = true;
   try {
     await finalizeRental(rentalToFinalize.value.id, {
       status: 'COMPLETED',
-      endMileage: Number(endMileage.value),
+      endMileage: mileage,
       realReturnDate: new Date().toISOString()
     });
     showFinalizeDialog.value = false;
-    fetchRentals({ page: 1, itemsPerPage: itemsPerPage.value });
-  } catch (error) {
+    expanded.value = [];
+    await nextTick();
+    await fetchRentals({ page: currentPage.value, itemsPerPage: itemsPerPage.value });
   } finally {
     confirmLoading.value = false;
+    rentalToFinalize.value = null;
   }
 };
 </script>
 
 <template>
   <v-container fluid class="py-8">
-    
-    <div class="d-flex justify-space-between align-center mb-6">
-      <h1 class="text-h4 font-weight-black text-black">Gestão de Reservas</h1>
-    </div>
+    <h1 class="text-h4 font-weight-black text-black mb-6">Gestão de Reservas</h1>
 
     <v-card class="mb-6 rounded-lg border bg-white" elevation="0">
       <v-card-text>
@@ -117,10 +103,10 @@ const handleFinalize = async () => {
             ></v-select>
           </v-col>
 
-          <v-col cols="12" md="5">
+          <v-col cols="12" md="6">
             <v-text-field
-              v-model="filters.search"
-              label="Buscar por Cliente (Nome) ou Veículo (Placa)"
+              v-model="search"
+              label="Buscar por Cliente ou Placa"
               prepend-inner-icon="mdi-magnify"
               variant="outlined"
               density="compact"
@@ -128,19 +114,19 @@ const handleFinalize = async () => {
               bg-color="white"
               color="primary"
               base-color="black"
-              @keyup.enter="fetchRentals({ page: 1, itemsPerPage })"
+              @input="onSearchInput"
             ></v-text-field>
           </v-col>
-
-          <v-col cols="12" md="4" class="d-flex justify-end">
+          
+          <v-col cols="12" md="3">
              <v-btn 
                 color="black" 
                 variant="flat" 
-                class="font-weight-bold text-white"
-                prepend-icon="mdi-filter"
-                @click="fetchRentals({ page: 1, itemsPerPage })"
+                class="font-weight-bold text-white w-100"
+                prepend-icon="mdi-refresh"
+                @click="fetchRentals({ page: currentPage, itemsPerPage })"
              >
-                Aplicar Filtros
+                Atualizar
              </v-btn>
           </v-col>
         </v-row>
@@ -153,49 +139,89 @@ const handleFinalize = async () => {
       :headers="headers"
       :items="rentals"
       :items-length="totalItems"
-      :loading="loading"
+      :loading="loading && !processingId"
       item-value="id"
       show-expand
       hover
+      density="default"
       class="rounded-xl border elevation-2"
       @update:options="handleTableUpdate"
     >
       <template v-slot:item.user.name="{ item }">
         <div class="d-flex align-center py-2">
-           <v-avatar color="black" variant="tonal" size="32" class="mr-3 rounded-lg">
-             <span class="font-weight-black text-black">{{ item.user.name.charAt(0) }}</span>
+           <v-avatar color="grey-lighten-4" size="36" class="mr-3 border">
+             <span class="font-weight-black text-black text-body-2">{{ item.user?.name?.charAt(0) || '?' }}</span>
            </v-avatar>
-           <div>
-             <div class="font-weight-bold text-body-2 text-black">{{ item.user.name }}</div>
-             <div class="text-caption text-grey-darken-3 font-weight-medium">{{ item.user.email }}</div>
+           <div style="max-width: 180px;">
+             <div class="font-weight-bold text-body-2 text-black text-truncate" :title="item.user?.name">
+               {{ item.user?.name || '---' }}
+             </div>
+             <div class="text-caption text-grey-darken-1 text-truncate" :title="item.user?.email">
+               {{ item.user?.email }}
+             </div>
            </div>
         </div>
       </template>
 
       <template v-slot:item.car.model="{ item }">
-         <div class="font-weight-bold text-black">{{ item.car.model }}</div>
-         <v-chip size="x-small" variant="outlined" color="black" class="font-weight-bold mt-1">
-            {{ item.car.licensePlate }}
+         <div class="font-weight-bold text-black text-truncate" :title="item.car?.model">
+            {{ item.car?.model || '---' }}
+         </div>
+         <v-chip size="x-small" variant="outlined" color="grey-darken-4" class="font-weight-bold mt-1">
+            {{ item.car?.licensePlate || '---' }}
          </v-chip>
       </template>
 
       <template v-slot:item.startDate="{ item }">
-         <span class="text-black font-weight-medium">{{ formatDate(item.startDate) }}</span>
+         <div class="d-flex flex-column">
+             <span class="text-body-2 font-weight-bold text-black">
+                {{ new Date(item.startDate).toLocaleDateString('pt-BR') }}
+             </span>
+             <span class="text-caption text-grey-darken-1">
+                {{ new Date(item.startDate).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}) }}
+             </span>
+         </div>
       </template>
 
       <template v-slot:item.endDate="{ item }">
-        <div 
-          class="py-1 px-2 rounded" 
-          :class="{'bg-red-lighten-5 text-red-darken-4 font-weight-black border border-error': isLate(item)}"
-        >
-          {{ formatDate(item.endDate) }}
-          <v-tooltip location="top" v-if="isLate(item)">
-            <template v-slot:activator="{ props }">
-               <v-icon v-bind="props" icon="mdi-alert-circle" color="red-darken-4" class="ml-2"></v-icon>
-            </template>
-            <span class="font-weight-bold">Devolução atrasada! Multa será aplicada.</span>
-          </v-tooltip>
-        </div>
+        <div class="d-flex flex-column">
+             <span class="text-body-2 font-weight-bold" :class="isLate(item) ? 'text-red-darken-3' : 'text-black'">
+                {{ new Date(item.endDate).toLocaleDateString('pt-BR') }}
+             </span>
+             <div class="d-flex align-center">
+                <span class="text-caption text-grey-darken-1">
+                    {{ new Date(item.endDate).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}) }}
+                </span>
+                <v-tooltip location="top" v-if="isLate(item)">
+                    <template v-slot:activator="{ props }">
+                    <v-icon v-bind="props" icon="mdi-alert-circle" color="error" size="x-small" class="ml-1"></v-icon>
+                    </template>
+                    <span class="font-weight-bold">Devolução atrasada!</span>
+                </v-tooltip>
+             </div>
+         </div>
+      </template>
+
+      <template v-slot:item.pickupAgency.name="{ item }">
+         <div class="d-flex flex-column" style="max-width: 180px;">
+             <span class="text-body-2 font-weight-bold text-black text-truncate" :title="item.pickupAgency?.name">
+                {{ item.pickupAgency?.name || '---' }}
+             </span>
+             <span class="text-caption text-grey-darken-1 text-truncate">
+                {{ item.pickupAgency?.city }} - {{ item.pickupAgency?.state }}
+             </span>
+         </div>
+      </template>
+
+      <template v-slot:item.returnAgency.name="{ item }">
+         <div class="d-flex flex-column" style="max-width: 180px;">
+             <span class="text-body-2 font-weight-bold text-black text-truncate" :title="item.returnAgency?.name">
+                {{ item.returnAgency?.name || '---' }}
+             </span>
+             <span class="text-caption text-grey-darken-1 text-truncate">
+                {{ item.returnAgency?.city }} - {{ item.returnAgency?.state }}
+             </span>
+         </div>
       </template>
 
       <template v-slot:item.status="{ item }">
@@ -203,157 +229,53 @@ const handleFinalize = async () => {
           :color="getRentalStatusColor(item.status)"
           size="small"
           label
-          class="font-weight-black"
+          variant="tonal"
+          class="font-weight-black text-uppercase"
         >
           {{ formatRentalStatus(item.status) }}
         </v-chip>
       </template>
 
-      <template v-slot:item.totalValue="{ item }">
-        <span class="font-weight-black text-black">{{ formatCurrency(item.totalValue) }}</span>
-      </template>
-
       <template v-slot:item.actions="{ item }">
-         <v-btn 
-            v-if="item.status === 'CONFIRMED'"
-            size="small" 
-            color="success" 
-            variant="flat" 
-            prepend-icon="mdi-key-variant"
-            class="font-weight-bold text-white"
-            @click="handleCheckIn(item)"
-         >
-            Entregar
-         </v-btn>
-         
-         <v-btn 
-            v-if="item.status === 'ACTIVE'"
-            size="small" 
-            color="primary" 
-            variant="flat" 
-            prepend-icon="mdi-flag-checkered"
-            class="font-weight-bold"
-            @click="openFinalize(item)"
-         >
-            Receber
-         </v-btn>
+         <div class="d-flex justify-end">
+            <v-btn 
+              v-if="item.status === 'CONFIRMED'" 
+              color="success" 
+              size="small" 
+              variant="flat" 
+              class="font-weight-bold px-3"
+              :loading="processingId === item.id" 
+              @click.stop="handleCheckIn(item)"
+            >
+              Entregar
+            </v-btn>
+            <v-btn 
+              v-if="item.status === 'ACTIVE'" 
+              color="primary" 
+              size="small" 
+              variant="flat" 
+              class="font-weight-bold px-3"
+              @click.stop="openFinalize(item)"
+            >
+              Receber
+            </v-btn>
+         </div>
       </template>
 
       <template v-slot:expanded-row="{ columns, item }">
         <tr>
-          <td :colspan="columns.length" class="bg-grey-lighten-4 pa-6">
-            <v-row>
-              <v-col cols="12" md="6">
-                <v-card variant="flat" class="bg-white h-100 border rounded-lg">
-                  <v-card-title class="text-subtitle-1 font-weight-black text-black d-flex align-center pt-4">
-                    <v-icon icon="mdi-map-marker-path" class="mr-3" color="black"></v-icon>
-                    LOGÍSTICA
-                  </v-card-title>
-                  <v-divider class="my-2 border-opacity-25"></v-divider>
-                  <v-card-text>
-                    
-                    <div class="d-flex align-start mb-4">
-                       <v-icon icon="mdi-map-marker-radius" color="success" class="mr-3 mt-1"></v-icon>
-                       <div>
-                         <span class="text-caption text-grey-darken-1 font-weight-black text-uppercase d-block mb-1">Local de Retirada</span>
-                         <div class="text-body-1 font-weight-bold text-black">{{ item.pickupAgency.name }}</div>
-                         <div class="text-caption font-weight-medium text-grey-darken-3">{{ formatDate(item.startDate) }}</div>
-                       </div>
-                    </div>
-
-                    <div class="d-flex align-start">
-                       <v-icon icon="mdi-flag-checkered" color="error" class="mr-3 mt-1"></v-icon>
-                       <div>
-                         <span class="text-caption text-grey-darken-1 font-weight-black text-uppercase d-block mb-1">Local de Devolução</span>
-                         <div class="text-body-1 font-weight-bold text-black">{{ item.returnAgency.name }}</div>
-                         <div class="text-caption font-weight-medium text-grey-darken-3">{{ formatDate(item.endDate) }}</div>
-                         
-                         <div v-if="item.realReturnDate" class="mt-2">
-                            <v-chip size="small" :color="isLate(item) ? 'error' : 'success'" variant="elevated" class="font-weight-bold">
-                               Realizada: {{ formatDate(item.realReturnDate) }}
-                            </v-chip>
-                         </div>
-                       </div>
-                    </div>
-                  </v-card-text>
-                </v-card>
-              </v-col>
-
-              <v-col cols="12" md="6">
-                <v-card variant="flat" class="bg-white h-100 border rounded-lg">
-                  <v-card-title class="text-subtitle-1 font-weight-black text-black d-flex align-center pt-4">
-                    <v-icon icon="mdi-cash-multiple" class="mr-3" color="black"></v-icon>
-                    FINANCEIRO
-                  </v-card-title>
-                  <v-divider class="my-2 border-opacity-25"></v-divider>
-                  <v-card-text>
-                    <div class="d-flex justify-space-between mb-3 align-center">
-                      <span class="text-body-2 text-grey-darken-3 font-weight-bold text-uppercase">Valor Diária (Base)</span>
-                      <span class="text-body-1 font-weight-bold text-black">{{ formatCurrency(item.dailyRateSnapshot) }}</span>
-                    </div>
-                    
-                    <div v-if="isLate(item)" class="d-flex justify-space-between mb-3 align-center py-2 px-3 bg-red-lighten-5 rounded border border-error">
-                      <span class="text-caption font-weight-black text-uppercase text-red-darken-4">Status</span>
-                      <span class="font-weight-black text-red-darken-4">MULTA POR ATRASO APLICÁVEL</span>
-                    </div>
-
-                    <v-divider class="my-4 border-dashed border-opacity-100"></v-divider>
-                    
-                    <div class="d-flex justify-space-between align-center">
-                       <span class="text-h6 font-weight-black text-grey-darken-4">TOTAL FINAL</span>
-                       <span class="text-h5 font-weight-black text-black">{{ formatCurrency(item.totalValue) }}</span>
-                    </div>
-                  </v-card-text>
-                </v-card>
-              </v-col>
-            </v-row>
+          <td :colspan="columns.length" class="pa-0">
+            <RentalDetailsExpanded :item="item" :is-late="isLate" />
           </td>
         </tr>
       </template>
-
     </v-data-table-server>
 
-    <v-dialog v-model="showFinalizeDialog" max-width="450">
-      <v-card class="rounded-xl">
-        <v-card-title class="bg-black text-white py-4 font-weight-bold d-flex align-center">
-          <v-icon icon="mdi-flag-checkered" class="mr-3"></v-icon>
-          Finalizar Locação
-        </v-card-title>
-        
-        <v-card-text class="pt-6">
-          <v-alert color="info" variant="tonal" density="compact" class="mb-6 rounded-lg font-weight-medium border-opacity-100" border="start">
-             Confira o veículo antes de confirmar a quilometragem final.
-          </v-alert>
-
-          <v-text-field
-            v-model="endMileage"
-            label="Quilometragem Final (Hodômetro)"
-            type="number"
-            variant="outlined"
-            density="comfortable"
-            autofocus
-            suffix="KM"
-            color="black"
-            base-color="black"
-            class="font-weight-bold"
-          ></v-text-field>
-        </v-card-text>
-
-        <v-card-actions class="pa-4 pt-0">
-          <v-spacer></v-spacer>
-          <v-btn variant="text" @click="showFinalizeDialog = false" color="grey-darken-3" class="font-weight-bold">Cancelar</v-btn>
-          <v-btn 
-             color="black" 
-             variant="flat" 
-             class="font-weight-bold px-6"
-             :loading="confirmLoading" 
-             @click="handleFinalize"
-          >
-            Confirmar Devolução
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
+    <FinalizeRentalDialog 
+      v-model="showFinalizeDialog" 
+      :rental="rentalToFinalize" 
+      :loading="confirmLoading"
+      @confirm="onFinalizeConfirm"
+    />
   </v-container>
 </template>

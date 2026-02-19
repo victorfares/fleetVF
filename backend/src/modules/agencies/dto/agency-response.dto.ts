@@ -13,4 +13,7 @@ export class AgencyResponseDto {
 
   @Expose()
   state: string;
+
+  @Expose()
+  address: string;
 }

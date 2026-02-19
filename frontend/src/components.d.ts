@@ -17,9 +17,12 @@ declare module 'vue' {
     CarCard: typeof import('./components/CarCard.vue')['default']
     CarForm: typeof import('./components/CarForm.vue')['default']
     CarFormDialog: typeof import('./components/CarFormDialog.vue')['default']
+    FinalizeRentalDialog: typeof import('./components/FinalizeRentalDialog.vue')['default']
     GlobalSnackbar: typeof import('./components/GlobalSnackbar.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     RentalBookingDialog: typeof import('./components/RentalBookingDialog.vue')['default']
+    RentalDetailsExpanded: typeof import('./components/RentalDetailsExpanded.vue')['default']
+    RentalDetailsExplained: typeof import('./components/RentalDetailsExplained.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }
