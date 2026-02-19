@@ -77,6 +77,12 @@ const router = createRouter({
       meta: { requiresAuth: true, roles: ["ADMIN", "MANAGER"] },
     },
     {
+      path: "/admin/auditoria",
+      name: "admin-audit",
+      component: () => import("@/views/admin/AuditLogsView.vue"),
+      meta: { requiresAuth: true, roles: ["ADMIN"] },
+    },
+    {
       path: "/:pathMatch(.*)*",
       redirect: "/",
     },
@@ -103,7 +109,6 @@ router.beforeEach(async (to, from, next) => {
   }
 
   if (to.meta.roles && Array.isArray(to.meta.roles)) {
-    // TypeScript safe check
     if (!userRole || !to.meta.roles.includes(userRole)) {
       appStore.notifyWarning("Acesso não autorizado para seu perfil.");
       return next("/");

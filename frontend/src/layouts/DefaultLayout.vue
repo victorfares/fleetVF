@@ -35,6 +35,14 @@ const menuItems = computed(() => {
         { title: 'Gestão de Agências', icon: 'mdi-office-building-cog', to: '/admin/agencies' },
         { title: 'Gestão de Reservas', icon: 'mdi-calendar-clock', to: '/admin/reservas' },
       );
+
+
+      if (authStore.isAdmin) {
+        menus.push(
+          { title: 'Logs de Auditoria', icon: 'mdi-shield-search', to: '/admin/auditoria' }
+        );
+      }
+
     } else {
       menus.push(
         { type: 'divider' },
@@ -60,34 +68,21 @@ function handleLogout() {
 
 <template>
   <v-app>
-    <v-navigation-drawer 
-      v-model="drawer" 
-      :rail="rail" 
-      permanent 
-      @click="rail = false"
-      color="primary" 
-      theme="dark"
-      elevation="2"
-      width="280"
-    >
+    <v-navigation-drawer v-model="drawer" :rail="rail" permanent @click="rail = false" color="primary" theme="dark"
+      elevation="2" width="280">
       <v-list>
         <v-list-item nav>
           <template v-slot:prepend>
-             <v-icon icon="mdi-steering" size="32" color="white" class="mr-2"></v-icon>
+            <v-icon icon="mdi-steering" size="32" color="white" class="mr-2"></v-icon>
           </template>
-          
+
           <v-list-item-title class="font-weight-black text-h6 text-uppercase text-white" style="letter-spacing: 1px;">
             FleetVF
           </v-list-item-title>
-          
+
           <template v-slot:append>
-            <v-btn 
-              :icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'" 
-              variant="text" 
-              size="small" 
-              color="white"
-              @click.stop="rail = !rail"
-            ></v-btn>
+            <v-btn :icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'" variant="text" size="small" color="white"
+              @click.stop="rail = !rail"></v-btn>
           </template>
         </v-list-item>
       </v-list>
@@ -96,44 +91,21 @@ function handleLogout() {
 
       <v-list density="compact" nav>
         <template v-for="(item, i) in menuItems" :key="i">
-          <v-divider 
-            v-if="item.type === 'divider'" 
-            class="my-2 border-opacity-25"
-          ></v-divider>
-          
-          <v-list-item 
-            v-else
-            :prepend-icon="item.icon" 
-            :title="item.title" 
-            :to="item.to"
-            active-color="secondary"
-            rounded="lg"
-            class="mb-1 font-weight-medium"
-          ></v-list-item>
+          <v-divider v-if="item.type === 'divider'" class="my-2 border-opacity-25"></v-divider>
+
+          <v-list-item v-else :prepend-icon="item.icon" :title="item.title" :to="item.to" active-color="secondary"
+            rounded="lg" class="mb-1 font-weight-medium"></v-list-item>
         </template>
       </v-list>
 
       <template v-slot:append v-if="authStore.isAuthenticated">
         <div class="pa-2">
           <v-fade-transition mode="out-in">
-            <v-btn 
-              v-if="!rail" 
-              block 
-              color="error" 
-              variant="flat" 
-              prepend-icon="mdi-logout" 
-              class="font-weight-bold"
-              @click="handleLogout"
-            >
+            <v-btn v-if="!rail" block color="error" variant="flat" prepend-icon="mdi-logout" class="font-weight-bold"
+              @click="handleLogout">
               Sair
             </v-btn>
-            <v-btn 
-              v-else 
-              icon="mdi-logout" 
-              color="error" 
-              variant="flat" 
-              @click="handleLogout"
-            ></v-btn>
+            <v-btn v-else icon="mdi-logout" color="error" variant="flat" @click="handleLogout"></v-btn>
           </v-fade-transition>
         </div>
       </template>
@@ -141,24 +113,20 @@ function handleLogout() {
 
     <v-app-bar elevation="0" color="white" class="border-b">
       <v-app-bar-nav-icon v-if="!drawer" @click="drawer = !drawer"></v-app-bar-nav-icon>
-      
+
       <v-app-bar-title class="text-grey-darken-3 font-weight-bold text-body-1">
-        {{ authStore.isAuthenticated ? (authStore.isAdmin ? 'Painel Administrativo' : 'Área do Cliente') : 'Bem-vindo' }}
+        {{ authStore.isAuthenticated ? (authStore.isAdmin ? 'Painel Administrativo' : 'Área do Cliente') : 'Bem-vindo'
+        }}
       </v-app-bar-title>
-      
+
       <template v-slot:append>
         <v-menu v-if="authStore.isAuthenticated" location="bottom end" transition="scale-transition">
           <template v-slot:activator="{ props }">
-            <v-avatar 
-              color="secondary" 
-              size="36" 
-              class="ml-4 mr-2 cursor-pointer elevation-1" 
-              v-bind="props"
-            >
+            <v-avatar color="secondary" size="36" class="ml-4 mr-2 cursor-pointer elevation-1" v-bind="props">
               <span class="text-white font-weight-bold text-caption">{{ userInitials }}</span>
             </v-avatar>
           </template>
-          
+
           <v-card min-width="200" rounded="lg" elevation="4">
             <v-list>
               <v-list-item>
