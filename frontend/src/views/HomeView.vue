@@ -36,10 +36,11 @@ onMounted(() => {
   fetchCars();
 });
 
+// Ícones atualizados para opções 100% compatíveis e visualmente fortes
 const benefits = [
-  { title: 'Transparência Total', desc: 'Sem taxas ocultas. Valor final garantido.', icon: 'mdi-cash-check' },
-  { title: 'Suporte 24/7', desc: 'Equipe pronta para ajudar a qualquer hora.', icon: 'mdi-face-agent' },
-  { title: 'Frota Premium', desc: 'Carros revisados e higienizados.', icon: 'mdi-sparkles' }
+  { title: 'Transparência Total', desc: 'Sem taxas ocultas. Valor final garantido.', icon: 'mdi-check-decagram' },
+  { title: 'Suporte 24/7', desc: 'Equipe pronta para ajudar a qualquer hora.', icon: 'mdi-headset' },
+  { title: 'Frota Premium', desc: 'Carros revisados e higienizados.', icon: 'mdi-car-star' }
 ];
 </script>
 
@@ -53,50 +54,50 @@ const benefits = [
         <v-row align="center" justify="center">
           
           <v-col cols="12" md="6" lg="5" class="text-center text-md-left z-index-1">
-            <v-chip color="secondary" variant="flat" size="small" class="mb-6 font-weight-bold text-uppercase">
+            <v-chip color="black" variant="flat" size="small" class="mb-6 font-weight-bold text-uppercase text-amber-accent-3">
               Ofertas de Verão - Até 30% OFF
             </v-chip>
             
-            <h1 class="text-h3 text-lg-h2 font-weight-black text-primary mb-4" style="line-height: 1.1;">
+            <h1 class="text-h3 text-lg-h2 font-weight-black text-black mb-4" style="line-height: 1.1;">
               Explore o mundo <br>
-              <span class="text-secondary">no seu ritmo</span>
+              <span class="text-amber-darken-2">no seu ritmo</span>
             </h1>
             
-            <p class="text-h6 text-grey-darken-1 mb-8 font-weight-regular lh-sm">
+            <p class="text-h6 text-grey-darken-2 mb-8 font-weight-bold lh-sm">
               Do compacto econômico ao SUV de luxo. Liberdade e segurança para sua família.
             </p>
             
             <div class="d-flex flex-column flex-sm-row gap-4 justify-center justify-md-start align-center ga-4">
               <v-btn 
                 to="/frota" 
-                color="primary" 
+                color="amber-darken-1" 
                 size="x-large" 
-                elevation="6" 
+                elevation="4" 
                 rounded="xl" 
-                class="px-8 font-weight-bold"
+                class="px-8 font-weight-black text-black"
               >
-                Ver Carros
+                VER CARROS
                 <v-icon end icon="mdi-car-side" class="ml-2"></v-icon>
               </v-btn>
               
-              <div class="d-flex align-center text-grey-darken-2">
-                <v-icon icon="mdi-phone-in-talk" color="secondary" class="mr-2"></v-icon>
-                <span class="font-weight-medium">0800 123 4567</span>
+              <div class="d-flex align-center text-black">
+                <v-icon icon="mdi-phone-in-talk" color="amber-darken-2" class="mr-2"></v-icon>
+                <span class="font-weight-black">0800 123 4567</span>
               </div>
             </div>
             
-            <div class="mt-10 d-flex align-center justify-center justify-md-start text-grey-darken-1 ga-6">
-              <div class="d-flex align-center"><v-icon icon="mdi-shield-check" color="success" class="mr-2"></v-icon><span class="text-body-2 font-weight-medium">Seguro Incluso</span></div>
-              <div class="d-flex align-center"><v-icon icon="mdi-map-marker-check" color="success" class="mr-2"></v-icon><span class="text-body-2 font-weight-medium">KM Livre</span></div>
+            <div class="mt-10 d-flex align-center justify-center justify-md-start text-black ga-6">
+              <div class="d-flex align-center"><v-icon icon="mdi-shield-check" color="success" class="mr-2"></v-icon><span class="text-body-2 font-weight-bold">Seguro Incluso</span></div>
+              <div class="d-flex align-center"><v-icon icon="mdi-map-marker-check" color="success" class="mr-2"></v-icon><span class="text-body-2 font-weight-bold">KM Livre</span></div>
             </div>
           </v-col>
 
           <v-col cols="12" md="6" lg="6" offset-lg="1" class="position-relative mt-10 mt-md-0">
-              <v-sheet color="secondary" class="rounded-circle position-absolute d-none d-md-block" height="200" width="200" style="opacity: 0.1; bottom: -40px; left: -40px;"></v-sheet>
+              <v-sheet color="amber-darken-1" class="rounded-circle position-absolute d-none d-md-block" height="200" width="200" style="opacity: 0.15; bottom: -40px; left: -40px;"></v-sheet>
 
-              <v-card elevation="24" rounded="xl" class="border overflow-hidden bg-white border-primary border-opacity-25">
-                <v-img src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=1000&auto=format&fit=crop" height="200" cover gradient="to bottom, rgba(0,0,0,0), rgba(0,0,0,0.6)" class="align-end">
-                  <v-card-title class="text-white text-h5 font-weight-bold px-6 pb-4" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+              <v-card elevation="12" rounded="xl" class="border border-md border-amber-darken-1 overflow-hidden bg-white">
+                <v-img src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=1000&auto=format&fit=crop" height="200" cover gradient="to bottom, rgba(0,0,0,0), rgba(0,0,0,0.8)" class="align-end">
+                  <v-card-title class="text-white text-h5 font-weight-black px-6 pb-4" style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">
                     Encontre seu carro ideal
                   </v-card-title>
                 </v-img>
@@ -104,22 +105,22 @@ const benefits = [
                 <v-card-text class="pt-8 px-6">
                   <v-text-field
                     v-model="searchTerm"
-                    label="Buscar por marca ou modelo (ex: Toyota)"
+                    label="Buscar por marca ou modelo (ex: Nissan)"
                     prepend-inner-icon="mdi-car-search"
-                    variant="solo-filled" 
-                    bg-color="grey-lighten-4"
-                    flat
-                    density="default"
-                    color="primary"
+                    variant="outlined" 
+                    bg-color="white"
+                    color="black"
+                    base-color="black"
+                    density="comfortable"
                     hide-details="auto"
-                    class="mb-2 text-h6"
+                    class="mb-2 font-weight-bold"
                     @keyup.enter="handleSearch"
                   ></v-text-field>
                 </v-card-text>
 
                 <v-card-actions class="px-6 pb-6 pt-0">
-                  <v-btn block color="secondary" variant="elevated" size="x-large" class="font-weight-bold rounded-lg text-white" @click="handleSearch">
-                    Buscar Veículos
+                  <v-btn block color="black" variant="flat" size="x-large" class="font-weight-black rounded-lg text-amber-accent-3" @click="handleSearch">
+                    BUSCAR VEÍCULOS
                   </v-btn>
                 </v-card-actions>
               </v-card>
@@ -131,8 +132,8 @@ const benefits = [
     <v-container class="py-16">
       <v-row class="mb-8">
         <v-col cols="12" class="text-center">
-          <p class="text-overline text-secondary font-weight-bold mb-2">NOSSA FROTA</p>
-          <h2 class="text-h4 font-weight-bold text-primary">Destaques Recentes</h2>
+          <p class="text-overline text-grey-darken-2 font-weight-black mb-2">NOSSA FROTA</p>
+          <h2 class="text-h4 font-weight-black text-black">Destaques Recentes</h2>
         </v-col>
       </v-row>
 
@@ -144,8 +145,8 @@ const benefits = [
 
       <v-row v-else-if="!cars.length" justify="center">
         <v-col cols="12" class="text-center">
-          <p class="text-grey">Nenhum veículo disponível no momento.</p>
-          <v-btn variant="text" color="primary" to="/frota">Ver todos</v-btn>
+          <p class="text-grey font-weight-bold">Nenhum veículo disponível no momento.</p>
+          <v-btn variant="text" color="black" class="font-weight-black mt-2" to="/frota">Ver todos</v-btn>
         </v-col>
       </v-row>
 
@@ -161,8 +162,8 @@ const benefits = [
 
       <v-row class="mt-8">
         <v-col class="text-center">
-          <v-btn to="/frota" variant="outlined" color="primary" rounded="xl" size="large" class="px-8 font-weight-bold">
-            Ver Frota Completa
+          <v-btn to="/frota" variant="outlined" color="black" rounded="xl" size="large" class="px-8 font-weight-black">
+            VER FROTA COMPLETA
           </v-btn>
         </v-col>
       </v-row>
@@ -172,24 +173,24 @@ const benefits = [
       <v-container>
         <v-row justify="center" class="mb-10">
           <v-col cols="12" md="8">
-            <h3 class="text-h4 font-weight-bold mb-4 text-grey-darken-4">Por que alugar com a FleetVF?</h3>
-            <p class="text-h6 font-weight-regular text-grey-darken-1">Simplificamos o processo para você.</p>
+            <h3 class="text-h4 font-weight-black mb-4 text-black">Por que alugar com a FleetVF?</h3>
+            <p class="text-h6 font-weight-bold text-grey-darken-2">Simplificamos o processo para você.</p>
           </v-col>
         </v-row>
         
         <v-row justify="center" class="text-center">
           <v-col v-for="(benefit, i) in benefits" :key="i" cols="12" sm="6" md="4">
             <v-card 
-                class="py-10 px-6 h-100 rounded-xl d-flex flex-column align-center justify-center transition-swing" 
-                elevation="10"
-                style="background: linear-gradient(135deg, #1976D2 0%, #6200EA 100%); color: white;"
+                class="py-10 px-6 h-100 rounded-xl d-flex flex-column align-center justify-center transition-swing border" 
+                elevation="2"
+                color="amber-darken-1"
             >
-              <v-avatar color="white" size="90" class="mb-6 elevation-3" variant="flat">
-                <v-icon :icon="benefit.icon" color="primary" size="48"></v-icon>
+              <v-avatar color="black" size="80" class="mb-6 elevation-4">
+                <v-icon :icon="benefit.icon" color="amber-darken-1" size="40"></v-icon>
               </v-avatar>
               
-              <h4 class="text-h5 font-weight-black mb-3 text-white">{{ benefit.title }}</h4>
-              <p class="text-body-1 opacity-90 text-white font-weight-medium">{{ benefit.desc }}</p>
+              <h4 class="text-h5 font-weight-black mb-3 text-black">{{ benefit.title }}</h4>
+              <p class="text-body-1 font-weight-bold text-black" style="opacity: 0.85;">{{ benefit.desc }}</p>
             </v-card>
           </v-col>
         </v-row>
@@ -197,17 +198,17 @@ const benefits = [
     </v-sheet>
 
     <v-container class="py-16">
-      <v-card theme="dark" class="bg-grey-darken-4 rounded-xl overflow-hidden">
+      <v-card theme="dark" class="bg-black rounded-xl overflow-hidden elevation-10">
         <v-img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2000&auto=format&fit=crop" height="350" cover gradient="to right, rgba(0,0,0,0.9), rgba(0,0,0,0.3)">
           <v-row class="h-100 pa-8 pa-md-16" align="center">
             <v-col cols="12" md="6">
-              <h3 class="text-h4 font-weight-bold mb-4">{{ authStore.isAuthenticated ? 'Pronto para a próxima viagem?' : 'Comece sua jornada agora' }}</h3>
-              <p class="text-body-1 text-grey-lighten-1 mb-8">
+              <h3 class="text-h4 font-weight-black mb-4 text-white">{{ authStore.isAuthenticated ? 'Pronto para a próxima viagem?' : 'Comece sua jornada agora' }}</h3>
+              <p class="text-body-1 text-grey-lighten-2 mb-8 font-weight-medium">
                 {{ authStore.isAuthenticated ? 'Confira nossa frota atualizada e garanta o melhor preço.' : 'Cadastre-se gratuitamente e tenha acesso a descontos exclusivos.' }}
               </p>
               <div class="d-flex ga-4 flex-wrap">
-                <v-btn v-if="!authStore.isAuthenticated" prepend-icon="mdi-account-plus" color="white" variant="flat" size="large" class="px-6 text-black font-weight-bold" to="/signup">Criar Conta</v-btn>
-                <v-btn v-else prepend-icon="mdi-car-search" color="white" variant="flat" size="large" class="px-6 text-black font-weight-bold" to="/frota">Reservar Agora</v-btn>
+                <v-btn v-if="!authStore.isAuthenticated" prepend-icon="mdi-account-plus" color="amber-darken-1" variant="flat" size="large" class="px-6 text-black font-weight-black" to="/signup">Criar Conta</v-btn>
+                <v-btn v-else prepend-icon="mdi-car-search" color="amber-darken-1" variant="flat" size="large" class="px-6 text-black font-weight-black" to="/frota">Reservar Agora</v-btn>
               </div>
             </v-col>
           </v-row>
@@ -228,5 +229,6 @@ const benefits = [
 .transition-swing:hover {
   transform: translateY(-5px);
   transition: transform 0.3s ease;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
 }
 </style>
