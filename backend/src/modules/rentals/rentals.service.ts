@@ -489,9 +489,10 @@ export class RentalsService {
 
     const oldRental = { ...rental };
 
-    rental.status = RentalStatus.CANCELLED;
-    const savedRental = await this.rentalRepository.save(rental);
-
+    await this.rentalRepository.update(id, {
+      status: RentalStatus.CANCELLED,
+    });
+    const savedRental = await this.findOne(id);
     await this.auditService.logAction(
       currentUser,
       AuditAction.UPDATE,
