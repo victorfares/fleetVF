@@ -21,7 +21,7 @@ export const useRentalStore = defineStore("rental", () => {
       const { data } = await api.post("/rentals", dto);
       return data;
     } catch (err: any) {
-      throw err;
+      throw err; 
     } finally {
       loading.value = false;
     }
@@ -81,8 +81,24 @@ export const useRentalStore = defineStore("rental", () => {
       alertStore.showSuccess("Devolução registrada com sucesso!");
       return data;
     } catch (err: any) {
-      // 🛡️ LIMPEZA
       throw err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function cancelRental(id: string) {
+    loading.value = true;
+    try {
+      const { data } = await api.patch(`/rentals/${id}/cancel`);
+
+      const index = rentals.value.findIndex((r) => r.id === id);
+      if (index !== -1) rentals.value[index] = data;
+
+      alertStore.showSuccess("Reserva cancelada com sucesso.");
+      return data;
+    } catch (err: any) {
+      throw err; 
     } finally {
       loading.value = false;
     }
@@ -96,5 +112,6 @@ export const useRentalStore = defineStore("rental", () => {
     fetchRentals,
     checkIn,
     finalizeRental,
+    cancelRental, 
   };
 });

@@ -75,4 +75,11 @@ export class RentalsController {
   remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
     return this.rentalsService.remove(id, user);
   }
+
+  @Patch(':id/cancel')
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @ApiOperation({ summary: 'Cancela uma reserva confirmada' })
+  cancel(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+    return this.rentalsService.cancel(id, user);
+  }
 }

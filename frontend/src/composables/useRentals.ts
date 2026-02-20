@@ -24,12 +24,15 @@ export function useRentals() {
 
   const isLate = (rental: Rental) => {
     const end = new Date(rental.endDate);
+
     if (rental.status === "COMPLETED" && rental.realReturnDate) {
       return new Date(rental.realReturnDate) > end;
     }
+
     if (rental.status === "ACTIVE" || rental.status === "CONFIRMED") {
       return new Date() > end;
     }
+
     return false;
   };
 
@@ -60,10 +63,12 @@ export function useRentals() {
     loading,
     error,
     filters,
+
     fetchRentals,
     createRental: store.createRental,
     checkIn: store.checkIn,
     finalizeRental: store.finalizeRental,
+    cancelRental: store.cancelRental,
     isLate,
     formatCurrency,
     formatDate,

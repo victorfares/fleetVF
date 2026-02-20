@@ -9,7 +9,8 @@ import FinalizeRentalDialog from '@/components/FinalizeRentalDialog.vue';
 
 const route = useRoute();
 
-const { rentals, loading, totalItems, filters, fetchRentals, checkIn, finalizeRental, isLate } = useRentals();
+// 1. Extraímos o cancelRental do nosso composable
+const { rentals, loading, totalItems, filters, fetchRentals, checkIn, finalizeRental, cancelRental, isLate } = useRentals();
 const { formatRentalStatus, getRentalStatusColor } = useFormatters();
 const { headers, statusOptions, itemsPerPage, currentPage, expanded, search } = useRentalsTable();
 
@@ -17,7 +18,6 @@ const showFinalizeDialog = ref(false);
 const rentalToFinalize = ref<any>(null);
 const confirmLoading = ref(false);
 const processingId = ref<string | null>(null);
-
 
 onMounted(() => {
   if (route.query.userId || route.query.search) {
@@ -30,7 +30,6 @@ onMounted(() => {
   }
 });
 
-// --- Métodos de Controle ---
 const handleTableUpdate = async ({ page, itemsPerPage, sortBy }: any) => {
   currentPage.value = page;
   await fetchRentals({ page, itemsPerPage, sortBy });
@@ -52,7 +51,18 @@ const onSearchInput = () => {
   }, 600);
 };
 
-// --- Ações de Negócio ---
+
+const handleCancel = async (rental: any) => {
+  if (!confirm(`Tem certeza que deseja CANCELAR a reserva de ${rental.user?.name}? Esta ação não pode ser desfeita.`)) return;
+  
+  processingId.value = rental.id;
+  try {
+    await cancelRental(rental.id);
+  } finally {
+    processingId.value = null;
+  }
+};
+
 const handleCheckIn = async (rental: any) => {
   if (!confirm(`Confirmar entrega para ${rental.user?.name}?`)) return;
   processingId.value = rental.id;
@@ -254,6 +264,18 @@ const onFinalizeConfirm = async (mileage: number) => {
 
       <template v-slot:item.actions="{ item }">
          <div class="d-flex justify-end gap-2">
+            <v-btn 
+              v-if="item.status === 'CONFIRMED'" 
+              color="error" 
+              size="small" 
+              variant="tonal" 
+              class="font-weight-black px-4"
+              :loading="processingId === item.id" 
+              @click.stop="handleCancel(item)"
+            >
+              CANCELAR
+            </v-btn>
+
             <v-btn 
               v-if="item.status === 'CONFIRMED'" 
               color="success" 

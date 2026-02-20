@@ -416,7 +416,7 @@ export class RentalsService {
       );
     }
 
-    const oldRental = { ...rental }; 
+    const oldRental = { ...rental };
     const queryRunner = this.dataSource.createQueryRunner();
 
     await queryRunner.connect();
@@ -476,5 +476,31 @@ export class RentalsService {
     );
 
     return { message: 'Reserva removida com sucesso' };
+  }
+
+  async cancel(id: string, currentUser: User) {
+    const rental = await this.findOne(id);
+
+    if (rental.status !== RentalStatus.CONFIRMED) {
+      throw new BadRequestException(
+        `Não é possível cancelar uma reserva com status ${rental.status}. Apenas reservas CONFIRMED podem ser canceladas.`,
+      );
+    }
+
+    const oldRental = { ...rental };
+
+    rental.status = RentalStatus.CANCELLED;
+    const savedRental = await this.rentalRepository.save(rental);
+
+    await this.auditService.logAction(
+      currentUser,
+      AuditAction.UPDATE,
+      'Rental',
+      savedRental.id,
+      oldRental,
+      savedRental,
+    );
+
+    return savedRental;
   }
 }
