@@ -3,7 +3,6 @@ import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUsers } from '@/composables/useUsers';
 
-// IMPORTAÇÃO ATIVADA AQUI
 import UserFormDialog from '@/components/UserFormDialog.vue';
 
 const router = useRouter();

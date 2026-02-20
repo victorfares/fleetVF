@@ -22,7 +22,7 @@ const {
 } = useUserForm();
 
 const closeDialog = () => {
-  emit('update:modelValue', false); // Força o fechamento imediato
+  emit('update:modelValue', false);
 };
 
 watch(
@@ -30,10 +30,11 @@ watch(
   (isOpen) => {
     if (isOpen) {
       if (props.user) {
+        // Na edição, preenchemos o formData, mas a senha não será enviada depois
         formData.value = {
           name: props.user.name || '',
           email: props.user.email || '',
-          password: '',
+          password: '', 
           role: props.user.role || 'CLIENT',
         };
       } else {
@@ -46,14 +47,14 @@ watch(
 );
 
 const handleSave = async () => {
-  // 1. Força a validação Síncrona do Vuetify
+
   const { valid } = await formRef.value.validate();
   if (!valid) return;
 
-  // 2. Chama a API
+
   const success = await submitForm(props.user ? props.user.id : null);
   
-  // 3. Se a API retornou 200/201, fecha tudo e avisa a tabela
+
   if (success) {
     emit('saved'); 
     closeDialog(); 
@@ -97,7 +98,8 @@ const handleSave = async () => {
                 placeholder="Ex: joao@email.com"
                 type="email"
                 class="font-weight-bold text-black"
-                bg-color="grey-lighten-5"
+                :bg-color="isEdit ? 'grey-lighten-3' : 'grey-lighten-5'"
+                :disabled="isEdit" 
               ></v-text-field>
             </v-col>
 
@@ -115,19 +117,17 @@ const handleSave = async () => {
               ></v-select>
             </v-col>
 
-            <v-col cols="12">
-              <span class="text-caption font-weight-black text-black mb-1 d-block">
-                {{ isEdit ? 'Nova Senha (opcional)' : 'Senha de Acesso' }}
-              </span>
+            <v-col cols="12" v-if="!isEdit">
+              <span class="text-caption font-weight-black text-black mb-1 d-block">Senha de Acesso</span>
               <v-text-field
                 v-model="formData.password"
-                :rules="isEdit ? [] : [rules.passwordCreation]"
+                :rules="[rules.passwordCreation]"
                 :type="showPassword ? 'text' : 'password'"
                 :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
                 @click:append-inner="showPassword = !showPassword"
                 variant="outlined"
                 density="comfortable"
-                :placeholder="isEdit ? 'Deixe em branco para não alterar' : 'Digite uma senha segura'"
+                placeholder="Digite uma senha segura"
                 class="font-weight-bold text-black"
                 bg-color="grey-lighten-5"
               ></v-text-field>
