@@ -6,7 +6,9 @@ import type { Rental } from "@/types/Rental";
 
 export function useRentals() {
   const store = useRentalStore();
-  const { rentals, totalItems, loading, error } = storeToRefs(store);
+  
+  const { rentals, totalItems, loading } = storeToRefs(store);
+  
   const {
     formatCurrency,
     formatDate,
@@ -61,9 +63,7 @@ export function useRentals() {
     rentals,
     totalItems,
     loading,
-    error,
     filters,
-
     fetchRentals,
     createRental: store.createRental,
     checkIn: store.checkIn,

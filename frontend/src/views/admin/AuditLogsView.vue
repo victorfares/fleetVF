@@ -7,7 +7,7 @@ const { logs, loading, fetchLogs } = useAudit();
 const search = ref('');
 const expanded = ref([]);
 
-const headers = [
+const headers: any = [
   { title: 'Data / Hora', key: 'createdAt', width: '180px' },
   { title: 'Usuário', key: 'userEmail', minWidth: '200px' },
   { title: 'Ação', key: 'action', align: 'center' },
@@ -28,6 +28,7 @@ const getActionColor = (action: string) => {
 };
 
 const formatDate = (dateString: string) => {
+  if (!dateString) return { day: '', time: '' }; // Fallback de segurança
   const date = new Date(dateString);
   return {
     day: date.toLocaleDateString('pt-BR'),

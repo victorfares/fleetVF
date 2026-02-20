@@ -1,11 +1,11 @@
-import { ref, reactive, computed, onMounted, unref, type Ref } from 'vue';
-import api from '@/services/api';
-import { CarStatus } from '@/types/Car';
-import type { Car } from '@/types/Car';
-import type { Agency } from '@/types/Agency';
+import { ref, reactive, computed, onMounted, type Ref } from "vue";
+import api from "@/services/api";
+import { CarStatus } from "@/types/Car";
+import type { Car } from "@/types/Car";
+import type { Agency } from "@/types/Agency";
 
 interface UseCarFormOptions {
-  carRef: Ref<Car | null | undefined>; 
+  carRef: Ref<Car | null | undefined>;
   onSaved: () => void;
   onError?: (msg: string) => void;
 }
@@ -15,45 +15,47 @@ export function useCarForm(options: UseCarFormOptions) {
   const saving = ref(false);
   const loadingAgencies = ref(false);
   const agencies = ref<Agency[]>([]);
-  
+
   const isEditing = computed(() => !!options.carRef.value?.id);
 
   const formData = reactive({
-    brand: '',
-    model: '',
-    licensePlate: '',
+    brand: "",
+    model: "",
+    licensePlate: "",
     dailyRate: 0,
     currentMileage: 0,
     agencyId: null as string | null,
     status: CarStatus.AVAILABLE,
-    imageUrl: ''
+    imageUrl: "",
   });
 
   const rules = {
-    required: (v: any) => !!v || 'Campo obrigatório',
-    positive: (v: number) => v > 0 || 'Valor deve ser positivo',
+    required: (v: any) => !!v || "Campo obrigatório",
+    positive: (v: number) => v > 0 || "Valor deve ser positivo",
     minCurrentKm: (v: number) => {
-      // Usa options.carRef.value para pegar o carro atual
       const currentCar = options.carRef.value;
       if (!isEditing.value || !currentCar) return true;
-      return v >= currentCar.currentMileage || `A KM não pode ser menor que a atual (${currentCar.currentMileage} km)`;
-    }
+      return (
+        v >= currentCar.currentMileage ||
+        `A KM não pode ser menor que a atual (${currentCar.currentMileage} km)`
+      );
+    },
   };
 
   const statusOptions = [
-    { title: 'Disponível', value: CarStatus.AVAILABLE },
-    { title: 'Alugado', value: CarStatus.RENTED },
-    { title: 'Em Manutenção', value: CarStatus.MAINTENANCE },
+    { title: "Disponível", value: CarStatus.AVAILABLE },
+    { title: "Alugado", value: CarStatus.RENTED },
+    { title: "Em Manutenção", value: CarStatus.MAINTENANCE },
   ];
 
   const fetchAgencies = async () => {
     loadingAgencies.value = true;
     try {
-      const response = await api.get('/agencies'); 
+      const response = await api.get("/agencies");
       const data = response.data.data ? response.data.data : response.data;
       agencies.value = Array.isArray(data) ? data : data.data || [];
     } catch (error) {
-      console.error('Falha ao carregar agências', error);
+      console.error("Falha ao carregar agências", error);
     } finally {
       loadingAgencies.value = false;
     }
@@ -69,17 +71,17 @@ export function useCarForm(options: UseCarFormOptions) {
       formData.dailyRate = Number(car.dailyRate);
       formData.currentMileage = Number(car.currentMileage);
       formData.status = car.status;
-      formData.imageUrl = car.imageUrl || '';
-      formData.agencyId = car.agency?.id || car.agencyId || null;
+      formData.imageUrl = car.imageUrl || "";
+      formData.agencyId = car.agency?.id || null;
     } else {
-      formData.brand = '';
-      formData.model = '';
-      formData.licensePlate = '';
+      formData.brand = "";
+      formData.model = "";
+      formData.licensePlate = "";
       formData.dailyRate = 0;
       formData.currentMileage = 0;
       formData.agencyId = null;
       formData.status = CarStatus.AVAILABLE;
-      formData.imageUrl = '';
+      formData.imageUrl = "";
     }
   };
 
@@ -96,7 +98,7 @@ export function useCarForm(options: UseCarFormOptions) {
         currentMileage: Number(formData.currentMileage),
         agencyId: formData.agencyId,
         status: formData.status,
-        imageUrl: formData.imageUrl
+        imageUrl: formData.imageUrl,
       };
 
       const car = options.carRef.value;
@@ -106,17 +108,17 @@ export function useCarForm(options: UseCarFormOptions) {
       } else {
         const postPayload = {
           ...basePayload,
-          licensePlate: formData.licensePlate.toUpperCase()
+          licensePlate: formData.licensePlate.toUpperCase(),
         };
-        await api.post('/cars', postPayload);
+        await api.post("/cars", postPayload);
       }
-      
+
       options.onSaved();
     } catch (error: any) {
-      console.error('Erro ao salvar:', error);
-      const msg = error.response?.data?.message || 'Erro ao salvar veículo.';
+      console.error("Erro ao salvar:", error);
+      const msg = error.response?.data?.message || "Erro ao salvar veículo.";
       if (options.onError) {
-        options.onError(Array.isArray(msg) ? msg.join(', ') : msg);
+        options.onError(Array.isArray(msg) ? msg.join(", ") : msg);
       }
     } finally {
       saving.value = false;
@@ -137,6 +139,6 @@ export function useCarForm(options: UseCarFormOptions) {
     loadingAgencies,
     statusOptions,
     initForm,
-    save
+    save,
   };
 }

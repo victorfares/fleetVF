@@ -20,7 +20,7 @@ const userInitials = computed(() => {
 });
 
 const menuItems = computed(() => {
-  const menus = [
+  const menus: Array<{ title?: string; icon?: string; to?: string; type?: string }> = [
     { title: 'Início', icon: 'mdi-home', to: '/' },
     { title: 'Nossa Frota', icon: 'mdi-car-search', to: '/frota' },
     { title: 'Nossas Agências', icon: 'mdi-map-marker-radius', to: '/agencias' },

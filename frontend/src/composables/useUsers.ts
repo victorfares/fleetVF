@@ -1,21 +1,20 @@
 import { ref } from 'vue';
 import api from '@/services/api';
-import { useAppStore } from '@/stores/app';
+import { useAlertStore } from '@/stores/alert';
 
 export function useUsers() {
 
   const users = ref<any[]>([]);
   const loading = ref(false);
   const totalItems = ref(0);
-  
 
   const page = ref(1);
   const itemsPerPage = ref(10);
   const search = ref('');
 
-  const appStore = useAppStore();
+  const alertStore = useAlertStore();
 
-const fetchUsers = async () => {
+  const fetchUsers = async () => {
     loading.value = true;
     try {
       const offset = (page.value - 1) * itemsPerPage.value;
@@ -41,7 +40,6 @@ const fetchUsers = async () => {
         fetchedData = payload.data;
         fetchedCount = payload.count !== undefined ? payload.count : payload.data.length;
       } 
-
       else if (payload && payload.data && Array.isArray(payload.data.data)) {
         fetchedData = payload.data.data;
         fetchedCount = payload.data.count !== undefined ? payload.data.count : payload.data.data.length;
@@ -55,7 +53,7 @@ const fetchUsers = async () => {
       
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
-      appStore.notifyError('Erro ao buscar a lista de usuários.');
+      alertStore.showError('Erro ao buscar a lista de usuários.');
       users.value = [];
       totalItems.value = 0;
     } finally {
@@ -66,10 +64,10 @@ const fetchUsers = async () => {
   const deleteUser = async (id: string) => {
     try {
       await api.delete(`/users/${id}`);
-      appStore.notifySuccess('Usuário removido com sucesso!');
+      alertStore.showSuccess('Usuário removido com sucesso!');
       await fetchUsers();
     } catch (error: any) {
-      appStore.notifyError(
+      alertStore.showError(
         error.response?.data?.message || 'Erro ao remover usuário. Verifique se ele possui dependências.'
       );
       throw error;

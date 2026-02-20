@@ -16,7 +16,7 @@ export interface Car {
   status: CarStatus;
   imageUrl?: string;
   agency?: Agency;
-  gencyId?: string;
+  agencyId?: string;
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;

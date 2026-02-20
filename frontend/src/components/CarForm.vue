@@ -136,7 +136,7 @@
             <v-select
               v-model="formData.status"
               :items="statusOptions"
-              item-title="label"
+              item-title="title" 
               item-value="value"
               variant="outlined"
               color="black"
@@ -194,11 +194,14 @@
 </template>
 
 <script setup lang="ts">
+import { toRef, onMounted } from 'vue';
 import { useCarForm } from '@/composables/useCarForm';
 import type { Car } from '@/types/Car';
 
 const props = defineProps<{ carToEdit?: Car | null }>();
 const emit = defineEmits(['saved', 'cancel']);
+
+const carRef = toRef(props, 'carToEdit');
 
 const { 
   formRef, 
@@ -208,10 +211,15 @@ const {
   isEditing, 
   agencies, 
   loadingAgencies, 
-  statusOptions, 
+  statusOptions,
+  initForm,
   save 
 } = useCarForm({
-  carToEdit: props.carToEdit,
+  carRef: carRef,
   onSaved: () => emit('saved')
+});
+
+onMounted(() => {
+    initForm();
 });
 </script>

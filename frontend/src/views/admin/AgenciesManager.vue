@@ -2,10 +2,9 @@
 import { ref, watch } from 'vue';
 import { useAgencies } from '@/composables/useAgencies';
 import type { Agency } from '@/types/Agency';
-import { useAppStore } from '@/stores/app';
+import { useAlertStore } from '@/stores/alert';
 import AgencyFormDialog from '@/components/AgencyFormDialog.vue';
 
-// 1. Uso do Composable (Lógica separada)
 const {
   agencies,
   loading,
@@ -17,21 +16,20 @@ const {
   deleteAgency,
 } = useAgencies();
 
-const appStore = useAppStore();
+const alertStore = useAlertStore();
 
-// 2. Estado Local (Dialogs e UI)
+// Estado Local (Dialogs e UI)
 const isDialogOpen = ref(false);
 const agencyToEdit = ref<Agency | null>(null);
 const deleteLoading = ref<string | null>(null);
 
-// 3. Configuração da Tabela
-const headers = [
+const headers: any = [
   { title: 'Nome da Agência', key: 'name', align: 'start' },
   { title: 'Cidade / UF', key: 'location', sortable: false },
   { title: 'Endereço', key: 'address', sortable: false },
   { title: 'ID', key: 'id', align: 'start', sortable: false }, // Opcional, bom para debug
   { title: 'Ações', key: 'actions', sortable: false, align: 'end' },
-] as const;
+];
 
 // 4. Ações
 const openNewAgency = () => {
@@ -51,7 +49,7 @@ const handleDelete = async (agency: Agency) => {
   try {
     await deleteAgency(agency.id);
   } catch (error) {
-    appStore.notifyError(
+    alertStore.showError(
       'Erro ao excluir agência. Verifique se não há carros vinculados.'
     );
   } finally {
@@ -64,7 +62,7 @@ const onAgencySaved = () => {
   isDialogOpen.value = false;
 };
 
-// 5. Watchers (Paginação e Busca)
+// Watchers (Paginação e Busca)
 watch([page, itemsPerPage], () => {
   fetchAgencies();
 });

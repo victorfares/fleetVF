@@ -81,7 +81,7 @@ const specs = [
         <h2 class="text-h5 font-weight-black mb-3 text-black">Sobre este carro</h2>
         <p class="text-body-1 text-grey-darken-2" style="line-height: 1.8;">
           Este <strong>{{ car.brand }} {{ car.model }}</strong> é a escolha perfeita para quem busca conforto e desempenho. 
-          Situado na agência <strong>{{ car.agency.name }}</strong>, localizada em <strong>{{ car.agency.address }} ({{ car.agency.city }} - {{ car.agency.state }})</strong>, ele conta com manutenção em dia 
+          Situado na agência <strong>{{ car.agency?.name }}</strong>, localizada em <strong>{{ car.agency?.address }} ({{ car.agency?.city }} - {{ car.agency?.state }})</strong>, ele conta com manutenção em dia 
           e higienização completa antes de cada locação. Ideal para viagens em família ou compromissos executivos.
         </p>
       </v-col>
@@ -98,9 +98,9 @@ const specs = [
             <div class="d-flex align-start mb-6 bg-grey-lighten-4 pa-4 rounded-lg border">
               <v-icon icon="mdi-map-marker" size="small" color="amber-darken-2" class="mr-3 mt-1"></v-icon>
               <div>
-                <span class="text-body-2 font-weight-black text-black d-block mb-1">{{ car.agency.name }}</span>
-                <span class="text-caption text-grey-darken-3 d-block font-weight-medium">{{ car.agency.address }}</span>
-                <span class="text-caption text-grey-darken-2 d-block font-weight-bold">{{ car.agency.city }} - {{ car.agency.state }}</span>
+                <span class="text-body-2 font-weight-black text-black d-block mb-1">{{ car.agency?.name }}</span>
+                <span class="text-caption text-grey-darken-3 d-block font-weight-medium">{{ car.agency?.address }}</span>
+                <span class="text-caption text-grey-darken-2 d-block font-weight-bold">{{ car.agency?.city }} - {{ car.agency?.state }}</span>
               </div>
             </div>
 

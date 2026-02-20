@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useRentals } from '@/composables/useRentals';
 import { useAgencies } from '@/composables/useAgencies';
-import { useFormatters } from '@/composables/useFormatters'; // Importe os formatadores
+import { useFormatters } from '@/composables/useFormatters';
 import { useAuthStore } from '@/stores/auth';
 import type { Car } from '@/types/Car';
 
@@ -18,7 +18,7 @@ const router = useRouter();
 const authStore = useAuthStore();
 const { createRental, loading: renting } = useRentals();
 const { agencies, fetchAgencies } = useAgencies();
-const { formatCurrency } = useFormatters(); // Helper de moeda
+const { formatCurrency } = useFormatters();
 
 // Estados do Formulário
 const startDate = ref('');
@@ -31,7 +31,7 @@ const init = () => {
   if (agencies.value.length === 0) fetchAgencies();
   
   if (props.car) {
-    returnAgencyId.value = props.car.agency.id;
+    returnAgencyId.value = props.car.agency?.id || null;
   }
   
   showSuccessScreen.value = false;
@@ -63,7 +63,7 @@ const bookingSummary = computed(() => {
   const dailyRate = Number(props.car.dailyRate);
   const subtotal = days * dailyRate;
 
-  const isOneWay = returnAgencyId.value !== props.car.agency.id;
+  const isOneWay = returnAgencyId.value !== props.car.agency?.id;
   const returnFee = isOneWay ? subtotal * 0.30 : 0;
 
   const total = subtotal + returnFee;
@@ -79,14 +79,15 @@ const bookingSummary = computed(() => {
 });
 
 const handleSubmit = async () => {
-  if (!props.car || !authStore.user) return;
+  const agencyId = props.car?.agency?.id;
+  if (!props.car || !agencyId || !authStore.user) return;
 
   try {
     await createRental({
       userId: authStore.user.id,
       carId: props.car.id,
-      pickupAgencyId: props.car.agency.id,
-      returnAgencyId: returnAgencyId.value || props.car.agency.id,
+      pickupAgencyId: agencyId, // Usando a variável validada acima
+      returnAgencyId: returnAgencyId.value || agencyId,
       startDate: new Date(startDate.value).toISOString(),
       endDate: new Date(endDate.value).toISOString(),
     });
@@ -98,6 +99,7 @@ const handleSubmit = async () => {
     console.warn('Falha na reserva interceptada pelo sistema global.');
   }
 };
+
 const goToMyRentals = () => {
   handleClose();
   router.push('/meus-alugueis');
@@ -171,7 +173,7 @@ const getFormattedAddress = (agencyId: string) => {
 
                 <v-col cols="12" md="6">
                   <v-text-field
-                    :model-value="`${car.agency.name} (${car.agency.city})`"
+                    :model-value="`${car.agency?.name || ''} (${car.agency?.city || ''})`"
                     label="Local de Retirada (Fixo)"
                     variant="filled" 
                     readonly
@@ -310,10 +312,10 @@ const getFormattedAddress = (agencyId: string) => {
               <div class="flex-grow-1">
                  <span class="text-caption text-grey-darken-1 font-weight-bold text-uppercase d-block mb-1">Local de Retirada</span>
                  <span class="font-weight-bold text-body-2 d-block">
-                    {{ agencies.find(a => a.id === props.car?.agency.id)?.name }}
+                    {{ agencies.find(a => a.id === props.car?.agency?.id)?.name }}
                  </span>
                  <span class="text-caption text-grey-darken-2 d-block" style="line-height: 1.3;">
-                    {{ props.car ? getFormattedAddress(props.car.agency.id) : '' }}
+                    {{ props.car?.agency?.id ? getFormattedAddress(props.car.agency.id) : '' }}
                  </span>
               </div>
             </div>

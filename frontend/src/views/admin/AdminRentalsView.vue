@@ -6,10 +6,10 @@ import { useRentalsTable } from '@/composables/useRentalsTable';
 import { useFormatters } from '@/composables/useFormatters';
 import RentalDetailsExpanded from '@/components/RentalDetailsExpanded.vue';
 import FinalizeRentalDialog from '@/components/FinalizeRentalDialog.vue';
+import { RentalStatus } from '@/types/Rental';
 
 const route = useRoute();
 
-// 1. Extraímos o cancelRental do nosso composable
 const { rentals, loading, totalItems, filters, fetchRentals, checkIn, finalizeRental, cancelRental, isLate } = useRentals();
 const { formatRentalStatus, getRentalStatusColor } = useFormatters();
 const { headers, statusOptions, itemsPerPage, currentPage, expanded, search } = useRentalsTable();
@@ -83,7 +83,8 @@ const onFinalizeConfirm = async (mileage: number) => {
   confirmLoading.value = true;
   try {
     await finalizeRental(rentalToFinalize.value.id, {
-      status: 'COMPLETED',
+      // CORREÇÃO: Usando o Enum ao invés da string 'COMPLETED'
+      status: RentalStatus.COMPLETED,
       endMileage: mileage,
       realReturnDate: new Date().toISOString()
     });

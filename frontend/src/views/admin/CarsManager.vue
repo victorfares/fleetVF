@@ -3,7 +3,8 @@ import { ref, watch } from 'vue';
 import { useCars } from '@/composables/useCars';
 import { CarStatus } from '@/types/Car';
 import type { Car } from '@/types/Car';
-import { useAppStore } from '@/stores/app';
+// CORREÇÃO: Importando a nova store
+import { useAlertStore } from '@/stores/alert';
 import { useFormatters } from '@/composables/useFormatters';
 
 import CarFormDialog from '@/components/CarFormDialog.vue';
@@ -19,21 +20,23 @@ const {
   deleteCar,
 } = useCars();
 
-const appStore = useAppStore();
+// CORREÇÃO: Usando a nova store
+const alertStore = useAlertStore();
 const { formatCurrency } = useFormatters();
 
 const isDialogOpen = ref(false);
 const carToEdit = ref<Car | null>(null);
 const deleteLoading = ref<string | null>(null);
 
-const headers = [
+// CORREÇÃO: Adicionado o tipo genérico para os headers
+const headers: any = [
   { title: 'Modelo / Marca', key: 'model', align: 'start' },
   { title: 'Placa', key: 'licensePlate' },
   { title: 'Agência', key: 'agency.name', sortable: false },
   { title: 'Diária', key: 'dailyRate', align: 'end' },
   { title: 'Status', key: 'status', align: 'center' },
   { title: 'Ações', key: 'actions', sortable: false, align: 'end' },
-] as const;
+];
 
 // 4. Ações
 const openNewCar = () => {
@@ -53,7 +56,8 @@ const handleDelete = async (car: Car) => {
   try {
     await deleteCar(car.id);
   } catch (error) {
-    appStore.notifyError('Erro ao excluir veículo. Verifique e tente novamente.');
+    // CORREÇÃO: Usando o método showError
+    alertStore.showError('Erro ao excluir veículo. Verifique e tente novamente.');
   } finally {
     deleteLoading.value = null;
   }

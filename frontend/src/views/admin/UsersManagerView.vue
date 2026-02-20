@@ -17,7 +17,7 @@ const {
   deleteUser,
 } = useUsers();
 
-const headers = [
+const headers: any = [
   { title: 'Usuário', key: 'name', align: 'start', minWidth: '250px' },
   { title: 'Perfil de Acesso', key: 'role', align: 'center', minWidth: '150px' },
   { title: 'Data de Cadastro', key: 'createdAt', align: 'center', minWidth: '150px' },

@@ -1,11 +1,11 @@
 import { ref } from "vue";
 import api from "@/services/api";
-import { useAppStore } from "@/stores/app";
+import { useAlertStore } from "@/stores/alert";
 
 export function useAudit() {
-  const logs = ref([]);
+  const logs = ref<any[]>([]);
+  const alertStore = useAlertStore();
   const loading = ref(false);
-  const appStore = useAppStore();
 
   const fetchLogs = async () => {
     loading.value = true;
@@ -20,7 +20,7 @@ export function useAudit() {
       }
     } catch (error) {
       console.error(error);
-      appStore.notifyError("Erro ao buscar logs de auditoria.");
+      alertStore.showError("Erro ao buscar logs de auditoria.");
     } finally {
       loading.value = false;
     }
