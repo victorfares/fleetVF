@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import DefaultLayout from '@/layouts/DefaultLayout.vue';
-import GlobalSnackbar from '@/components/GlobalSnackbar.vue';
+import GlobalAlerts from '@/components/core/GlobalAlerts.vue';
 
 const route = useRoute();
 
@@ -12,16 +12,17 @@ const isBlankLayout = computed(() => route.meta.layout === 'blank');
 <template>
   <v-app v-if="isBlankLayout" style="font-family: 'Inter', sans-serif;">
     <router-view />
-    <GlobalSnackbar />
+    <GlobalAlerts />
   </v-app>
 
   <DefaultLayout v-else>
     <router-view />
+    <GlobalAlerts />
   </DefaultLayout>
 </template>
 
 <style>
-/* Estilos globais */
+/* Estilos globais mantidos */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 html, body {

@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
+import { useAlertStore } from '@/stores/alert';
 
-const baseURL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 const api = axios.create({
   baseURL,
@@ -24,6 +24,20 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    const alertStore = useAlertStore();
+
+    if (error.response && error.response.data) {
+      const message = error.response.data.message || 'Ocorreu um erro no servidor.';
+      
+      const finalMessage = Array.isArray(message) ? message[0] : message;
+
+      if (error.response.status !== 401) {
+        alertStore.showError(finalMessage);
+      }
+    } else if (error.message === 'Network Error') {
+      alertStore.showError('Não foi possível conectar ao servidor. Verifique sua conexão.');
+    }
+
     if (error.config && error.config.url.includes('/auth/login')) {
       return Promise.reject(error);
     }
@@ -34,7 +48,6 @@ api.interceptors.response.use(
       console.warn('Sessão expirada. Deslogando...');
       authStore.logout();
 
-      // Usa window.location para garantir limpeza total de estado
       window.location.href = '/login';
     }
 

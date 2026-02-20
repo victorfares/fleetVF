@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/services/api";
-import { useAppStore } from "@/stores/app";
+import { useAlertStore } from "@/stores/alert";
 import type {
   Rental,
   CreateRentalDto,
@@ -9,7 +9,7 @@ import type {
 } from "@/types/Rental";
 
 export const useRentalStore = defineStore("rental", () => {
-  const appStore = useAppStore();
+  const alertStore = useAlertStore();
 
   const rentals = ref<Rental[]>([]);
   const totalItems = ref(0);
@@ -19,14 +19,8 @@ export const useRentalStore = defineStore("rental", () => {
     loading.value = true;
     try {
       const { data } = await api.post("/rentals", dto);
-      appStore.notify("Reserva realizada com sucesso!", "success");
       return data;
     } catch (err: any) {
-      const msg = err.response?.data?.message || "Erro ao criar reserva.";
-      const finalMsg = Array.isArray(msg) ? msg[0] : msg;
-
-      appStore.notify(finalMsg, "error");
-      
       throw err;
     } finally {
       loading.value = false;
@@ -55,7 +49,6 @@ export const useRentalStore = defineStore("rental", () => {
       }
     } catch (err: any) {
       console.error("Erro ao buscar rentals:", err);
-      appStore.notify("Não foi possível carregar os aluguéis.", "error");
     } finally {
       loading.value = false;
     }
@@ -69,11 +62,9 @@ export const useRentalStore = defineStore("rental", () => {
       const index = rentals.value.findIndex((r) => r.id === id);
       if (index !== -1) rentals.value[index] = data;
 
-      appStore.notify("Check-in realizado! Veículo liberado.", "success");
+      alertStore.showSuccess("Check-in realizado! Veículo liberado.");
       return data;
     } catch (err: any) {
-      const msg = err.response?.data?.message || "Erro ao realizar Check-in.";
-      appStore.notify(msg, "error");
       throw err;
     } finally {
       loading.value = false;
@@ -87,12 +78,10 @@ export const useRentalStore = defineStore("rental", () => {
 
       const index = rentals.value.findIndex((r) => r.id === id);
       if (index !== -1) rentals.value[index] = data;
-
-      appStore.notify("Devolução registrada com sucesso!", "success");
+      alertStore.showSuccess("Devolução registrada com sucesso!");
       return data;
     } catch (err: any) {
-      const msg = err.response?.data?.message || "Erro ao finalizar aluguel.";
-      appStore.notify(msg, "error");
+      // 🛡️ LIMPEZA
       throw err;
     } finally {
       loading.value = false;

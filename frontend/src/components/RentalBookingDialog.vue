@@ -95,6 +95,7 @@ const handleSubmit = async () => {
     showSuccessScreen.value = true; 
 
   } catch (err) {
+    console.warn('Falha na reserva interceptada pelo sistema global.');
   }
 };
 const goToMyRentals = () => {

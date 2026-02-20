@@ -2,7 +2,6 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
-import GlobalSnackbar from '@/components/GlobalSnackbar.vue';
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -98,18 +97,6 @@ function handleLogout() {
             rounded="lg" class="mb-1 font-weight-medium"></v-list-item>
         </template>
       </v-list>
-
-      <template v-slot:append v-if="authStore.isAuthenticated">
-        <div class="pa-2">
-          <v-fade-transition mode="out-in">
-            <v-btn v-if="!rail" block color="error" variant="flat" prepend-icon="mdi-logout" class="font-weight-bold"
-              @click="handleLogout">
-              Sair
-            </v-btn>
-            <v-btn v-else icon="mdi-logout" color="error" variant="flat" @click="handleLogout"></v-btn>
-          </v-fade-transition>
-        </div>
-      </template>
     </v-navigation-drawer>
 
     <v-app-bar elevation="0" color="white" class="border-b">
@@ -155,7 +142,7 @@ function handleLogout() {
     </v-app-bar>
 
     <v-main class="bg-grey-lighten-5">
-      <router-view></router-view>
+      <slot></slot>
     </v-main>
 
     <v-footer class="bg-white text-center d-flex flex-column py-4 border-t" app absolute>
@@ -163,7 +150,6 @@ function handleLogout() {
         &copy; {{ new Date().getFullYear() }} FleetVF. Desenvolvido por Victor Fares.
       </div>
     </v-footer>
-
-    <GlobalSnackbar />
-  </v-app>
+    
+    </v-app>
 </template>
