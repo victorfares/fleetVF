@@ -34,7 +34,9 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
             },
             autoLoadEntities:
               configService.get<string>('DB_AUTOLOAD') === 'true',
-            synchronize: configService.get<string>('DB_SYNC') === 'true',
+            synchronize:
+              configService.get<string>('DB_SYNC') === 'true' ||
+              process.env.DB_SYNC === 'true',
           };
         }
 
