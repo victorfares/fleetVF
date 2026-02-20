@@ -22,22 +22,39 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        type: configService.get<any>('DB_TYPE'),
-        host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USER'),
-        password: configService.get<string>('DB_PASS'),
-        database: configService.get<string>('DB_NAME'),
+      useFactory: async (configService: ConfigService) => {
+        const databaseUrl = configService.get<string>('DATABASE_URL');
 
-        autoLoadEntities: configService.get<string>('DB_AUTOLOAD') === 'true',
-        synchronize: configService.get<string>('DB_SYNC') === 'true', // nao usar em producao
-      }),
+        if (databaseUrl) {
+          return {
+            type: 'postgres',
+            url: databaseUrl,
+            ssl: {
+              rejectUnauthorized: false,
+            },
+            autoLoadEntities:
+              configService.get<string>('DB_AUTOLOAD') === 'true',
+            synchronize: configService.get<string>('DB_SYNC') === 'true',
+          };
+        }
+
+        // Fallback: Se não tiver DATABASE_URL, usa as variáveis locais (Docker)
+        return {
+          type: configService.get<any>('DB_TYPE') || 'postgres',
+          host: configService.get<string>('DB_HOST'),
+          port: configService.get<number>('DB_PORT'),
+          username: configService.get<string>('DB_USER'),
+          password: configService.get<string>('DB_PASS'),
+          database: configService.get<string>('DB_NAME'),
+          autoLoadEntities: configService.get<string>('DB_AUTOLOAD') === 'true',
+          synchronize: configService.get<string>('DB_SYNC') === 'true',
+        };
+      },
     }),
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
-        limit: 100,
+        limit: 10,
       },
     ]),
     AgenciesModule,
