@@ -11,12 +11,12 @@ const {
   totalItems,
   page,
   itemsPerPage,
-  search,
   fetchAgencies,
   deleteAgency,
 } = useAgencies();
 
 const alertStore = useAlertStore();
+
 
 // Estado Local (Dialogs e UI)
 const isDialogOpen = ref(false);
@@ -27,11 +27,10 @@ const headers: any = [
   { title: 'Nome da Agência', key: 'name', align: 'start' },
   { title: 'Cidade / UF', key: 'location', sortable: false },
   { title: 'Endereço', key: 'address', sortable: false },
-  { title: 'ID', key: 'id', align: 'start', sortable: false }, // Opcional, bom para debug
   { title: 'Ações', key: 'actions', sortable: false, align: 'end' },
 ];
 
-// 4. Ações
+// Ações
 const openNewAgency = () => {
   agencyToEdit.value = null;
   isDialogOpen.value = true;
@@ -62,18 +61,9 @@ const onAgencySaved = () => {
   isDialogOpen.value = false;
 };
 
-// Watchers (Paginação e Busca)
+// Watcher apenas para Paginação
 watch([page, itemsPerPage], () => {
   fetchAgencies();
-});
-
-let searchTimeout: ReturnType<typeof setTimeout>;
-watch(search, () => {
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => {
-    page.value = 1;
-    fetchAgencies();
-  }, 600);
 });
 
 // Carga Inicial
@@ -101,25 +91,13 @@ fetchAgencies();
         </v-btn>
       </div>
 
-      <v-card elevation="1" rounded="lg" class="border">
+      <v-card elevation="2" rounded="lg" class="border">
         
-        <v-card-title class="d-flex align-center py-4 px-6">
-          <v-icon icon="mdi-office-building-cog" class="mr-2 text-grey"></v-icon>
-          <span class="text-subtitle-1 font-weight-bold">Agências Parceiras</span>
-          
+        <v-card-title class="d-flex align-center py-4 px-6 bg-grey-lighten-4 border-bottom">
+          <v-icon icon="mdi-office-building-cog" class="mr-3 text-primary"></v-icon>
+          <span class="text-h6 font-weight-bold text-grey-darken-4">Lista de Agências Parceiras</span>
           <v-spacer></v-spacer>
-          
-          <v-text-field
-            v-model="search"
-            density="compact"
-            variant="outlined"
-            label="Buscar agência..."
-            prepend-inner-icon="mdi-magnify"
-            single-line
-            hide-details
-            style="max-width: 300px"
-          ></v-text-field>
-        </v-card-title>
+          </v-card-title>
 
         <v-divider></v-divider>
 
@@ -132,20 +110,21 @@ fetchAgencies();
           :loading="loading"
           item-value="id"
           hover
-          class="rounded-0"
+          class="custom-table rounded-0"
         >
           <template v-slot:item.name="{ item }">
-            <div class="font-weight-bold text-body-2">{{ item.name }}</div>
+            <div class="font-weight-bold text-body-1 text-grey-darken-4">{{ item.name }}</div>
           </template>
 
           <template v-slot:item.location="{ item }">
-            <v-chip size="small" variant="tonal" color="primary" class="font-weight-medium">
+            <v-chip size="default" variant="tonal" color="primary" class="font-weight-medium">
+              <v-icon start icon="mdi-map-marker-outline" size="small"></v-icon>
               {{ item.city }} - {{ item.state }}
             </v-chip>
           </template>
           
-          <template v-slot:item.id="{ item }">
-             <span class="text-caption text-grey">{{ item.id.slice(0, 8) }}...</span>
+          <template v-slot:item.address="{ item }">
+            <span class="text-body-2 text-grey-darken-2">{{ item.address }}</span>
           </template>
 
           <template v-slot:item.actions="{ item }">
@@ -158,6 +137,7 @@ fetchAgencies();
                     variant="text" 
                     size="small" 
                     color="primary"
+                    class="mr-1"
                     @click="openEditAgency(item)"
                   ></v-btn>
                 </template>
@@ -180,11 +160,12 @@ fetchAgencies();
           </template>
 
           <template v-slot:no-data>
-            <div class="pa-8 text-center">
-              <v-icon icon="mdi-domain-off" size="40" color="grey-lighten-1" class="mb-2"></v-icon>
-              <p class="text-grey">Nenhuma agência encontrada.</p>
-              <v-btn variant="text" color="primary" @click="openNewAgency" class="mt-2">
-                Cadastrar a primeira
+            <div class="pa-10 text-center">
+              <v-icon icon="mdi-domain-off" size="50" color="grey-lighten-2" class="mb-4"></v-icon>
+              <h3 class="text-h6 text-grey-darken-1 mb-2">Nenhuma agência encontrada</h3>
+              <p class="text-body-2 text-grey mb-4">Comece adicionando seu primeiro ponto de retirada.</p>
+              <v-btn variant="flat" color="primary" @click="openNewAgency" prepend-icon="mdi-plus">
+                Cadastrar Agência
               </v-btn>
             </div>
           </template>

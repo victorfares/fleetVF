@@ -20,7 +20,7 @@ export class AgenciesService {
   constructor(
     @InjectRepository(Agency)
     private readonly agencyRepository: Repository<Agency>,
-    private readonly auditService: AuditService, // Injetando o serviço de auditoria
+    private readonly auditService: AuditService,
   ) {}
 
   private mapToDto(entity: Agency | Agency[]): any {

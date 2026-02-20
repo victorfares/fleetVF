@@ -6,6 +6,7 @@ import { useAgencies } from '@/composables/useAgencies';
 import { useFormatters } from '@/composables/useFormatters';
 import { useAuthStore } from '@/stores/auth';
 import type { Car } from '@/types/Car';
+import { useDisplay } from 'vuetify';
 
 const props = defineProps<{
   modelValue: boolean;
@@ -19,6 +20,8 @@ const authStore = useAuthStore();
 const { createRental, loading: renting } = useRentals();
 const { agencies, fetchAgencies } = useAgencies();
 const { formatCurrency } = useFormatters();
+
+const { mobile } = useDisplay();
 
 // Estados do Formulário
 const startDate = ref('');
@@ -47,7 +50,6 @@ const handleClose = () => {
   }, 300);
 };
 
-// --- LÓGICA DE CÁLCULO DE PREÇO (LIVE PRICING) ---
 const bookingSummary = computed(() => {
   if (!startDate.value || !endDate.value || !props.car) return null;
 
@@ -86,7 +88,7 @@ const handleSubmit = async () => {
     await createRental({
       userId: authStore.user.id,
       carId: props.car.id,
-      pickupAgencyId: agencyId, // Usando a variável validada acima
+      pickupAgencyId: agencyId,
       returnAgencyId: returnAgencyId.value || agencyId,
       startDate: new Date(startDate.value).toISOString(),
       endDate: new Date(endDate.value).toISOString(),
@@ -123,12 +125,18 @@ const getFormattedAddress = (agencyId: string) => {
     max-width="700"
     @after-enter="init"
     persistent
+    :fullscreen="mobile"
+    transition="dialog-bottom-transition"
   >
-    <v-window v-model="showSuccessScreen">
+    <v-window v-model="showSuccessScreen" :class="{ 'h-100': mobile }">
       
-      <v-window-item :value="false">
-        <v-card class="rounded-lg bg-white" v-if="car">
-          <v-card-title class="bg-primary text-white py-4 font-weight-bold d-flex align-center justify-space-between">
+      <v-window-item :value="false" :class="{ 'h-100': mobile }">
+        <v-card 
+          :class="['bg-white d-flex flex-column', mobile ? 'h-100 rounded-0' : 'rounded-lg']" 
+          style="max-height: 90vh;" 
+          v-if="car"
+        >
+          <v-card-title class="bg-primary text-white py-4 font-weight-bold d-flex align-center justify-space-between flex-shrink-0">
             <div class="d-flex align-center">
               <v-icon icon="mdi-calendar-check" class="mr-2"></v-icon>
               Reservar {{ car.model }}
@@ -136,7 +144,7 @@ const getFormattedAddress = (agencyId: string) => {
             <v-btn icon="mdi-close" variant="text" density="compact" @click="handleClose"></v-btn>
           </v-card-title>
           
-          <v-card-text class="pt-6 pb-2">
+          <v-card-text class="pt-6 pb-2 flex-grow-1 overflow-y-auto">
             
             <v-alert icon="mdi-tag-text-outline" variant="tonal" color="info" class="mb-6 text-caption rounded-lg border-info" density="compact">
               A tarifa diária é <strong>{{ formatCurrency(Number(car.dailyRate)) }}</strong>. 
@@ -145,7 +153,6 @@ const getFormattedAddress = (agencyId: string) => {
 
             <v-form @submit.prevent="handleSubmit">
               <v-row dense>
-                
                 <v-col cols="12" md="6">
                   <v-text-field
                     v-model="startDate"
@@ -269,7 +276,7 @@ const getFormattedAddress = (agencyId: string) => {
 
           <v-divider></v-divider>
 
-          <v-card-actions class="pa-4 bg-white">
+          <v-card-actions class="pa-4 bg-white flex-shrink-0">
             <v-spacer></v-spacer>
             <v-btn variant="text" color="grey-darken-3" @click="handleClose" class="font-weight-medium">Cancelar</v-btn>
             <v-btn 
@@ -287,8 +294,8 @@ const getFormattedAddress = (agencyId: string) => {
         </v-card>
       </v-window-item>
 
-      <v-window-item :value="true">
-        <v-card class="rounded-lg bg-white text-center pa-8">
+      <v-window-item :value="true" :class="{ 'h-100': mobile }">
+        <v-card :class="['bg-white text-center pa-8 d-flex flex-column justify-center', mobile ? 'h-100 rounded-0' : 'rounded-lg']" style="max-height: 90vh; overflow-y: auto;">
           
           <div class="mb-6">
             <v-avatar color="success" size="90" variant="tonal" class="mb-4">

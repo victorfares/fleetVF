@@ -3,7 +3,6 @@ import { ref, watch } from 'vue';
 import { useCars } from '@/composables/useCars';
 import { CarStatus } from '@/types/Car';
 import type { Car } from '@/types/Car';
-// CORREÇÃO: Importando a nova store
 import { useAlertStore } from '@/stores/alert';
 import { useFormatters } from '@/composables/useFormatters';
 
@@ -20,7 +19,6 @@ const {
   deleteCar,
 } = useCars();
 
-// CORREÇÃO: Usando a nova store
 const alertStore = useAlertStore();
 const { formatCurrency } = useFormatters();
 
@@ -28,17 +26,48 @@ const isDialogOpen = ref(false);
 const carToEdit = ref<Car | null>(null);
 const deleteLoading = ref<string | null>(null);
 
-// CORREÇÃO: Adicionado o tipo genérico para os headers
+const headerClasses = 'text-grey-darken-4 font-weight-bold text-uppercase bg-grey-lighten-4';
+
 const headers: any = [
-  { title: 'Modelo / Marca', key: 'model', align: 'start' },
-  { title: 'Placa', key: 'licensePlate' },
-  { title: 'Agência', key: 'agency.name', sortable: false },
-  { title: 'Diária', key: 'dailyRate', align: 'end' },
-  { title: 'Status', key: 'status', align: 'center' },
-  { title: 'Ações', key: 'actions', sortable: false, align: 'end' },
+  { 
+    title: 'Modelo / Marca', 
+    key: 'model', 
+    align: 'start',
+    headerProps: { class: headerClasses }
+  },
+  { 
+    title: 'Placa', 
+    key: 'licensePlate',
+    headerProps: { class: headerClasses }
+  },
+  { 
+    title: 'Agência', 
+    key: 'agency.name', 
+    sortable: false,
+    headerProps: { class: headerClasses }
+  },
+  { 
+    title: 'Diária', 
+    key: 'dailyRate', 
+    align: 'end',
+    headerProps: { class: headerClasses }
+  },
+  { 
+    title: 'Status', 
+    key: 'status', 
+    align: 'center',
+    headerProps: { class: headerClasses }
+  },
+  { 
+    title: 'Ações', 
+    key: 'actions', 
+    sortable: false, 
+    align: 'end',
+    headerProps: { class: headerClasses }
+  },
 ];
 
-// 4. Ações
+// Ações
 const openNewCar = () => {
   carToEdit.value = null;
   isDialogOpen.value = true;
@@ -56,7 +85,6 @@ const handleDelete = async (car: Car) => {
   try {
     await deleteCar(car.id);
   } catch (error) {
-    // CORREÇÃO: Usando o método showError
     alertStore.showError('Erro ao excluir veículo. Verifique e tente novamente.');
   } finally {
     deleteLoading.value = null;
@@ -64,7 +92,7 @@ const handleDelete = async (car: Car) => {
 };
 
 const onCarSaved = () => {
-  fetchCars(); // Recarrega a tabela
+  fetchCars();
   isDialogOpen.value = false;
 };
 
@@ -76,7 +104,7 @@ let searchTimeout: ReturnType<typeof setTimeout>;
 watch(search, () => {
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
-    page.value = 1; // Volta pra primeira página ao buscar
+    page.value = 1;
     fetchCars();
   }, 600);
 });
@@ -91,7 +119,6 @@ const getStatusColor = (status: CarStatus) => {
   }
 };
 
-// Carga Inicial
 fetchCars();
 </script>
 
@@ -116,11 +143,11 @@ fetchCars();
         </v-btn>
       </div>
 
-      <v-card elevation="1" rounded="lg" class="border">
+      <v-card elevation="2" rounded="lg" class="border">
         
-        <v-card-title class="d-flex align-center py-4 px-6">
-          <v-icon icon="mdi-car-multiple" class="mr-2 text-grey"></v-icon>
-          <span class="text-subtitle-1 font-weight-bold">Veículos Cadastrados</span>
+        <v-card-title class="d-flex align-center py-4 px-6 bg-grey-lighten-4 border-b">
+          <v-icon icon="mdi-car-multiple" class="mr-3 text-primary" size="large"></v-icon>
+          <span class="text-h6 font-weight-bold text-grey-darken-4">Veículos Cadastrados</span>
           
           <v-spacer></v-spacer>
           
@@ -132,6 +159,7 @@ fetchCars();
             prepend-inner-icon="mdi-magnify"
             single-line
             hide-details
+            bg-color="white"
             style="max-width: 300px"
           ></v-text-field>
         </v-card-title>
@@ -155,10 +183,23 @@ fetchCars();
                 <v-img :src="item.imageUrl" cover icon="mdi-car"></v-img>
               </v-avatar>
               <div>
-                <div class="font-weight-bold text-body-2">{{ item.brand }} {{ item.model }}</div>
+                <div class="font-weight-bold text-body-1 text-grey-darken-4">{{ item.brand }} {{ item.model }}</div>
                 <div class="text-caption text-grey">{{ item.id.slice(0, 8) }}...</div>
               </div>
             </div>
+          </template>
+
+          <template v-slot:item.licensePlate="{ item }">
+            <v-chip size="small" variant="outlined" color="grey-darken-2" class="font-weight-bold text-uppercase bg-grey-lighten-4">
+              {{ item.licensePlate }}
+            </v-chip>
+          </template>
+
+          <template v-slot:item.agency.name="{ item }">
+            <span class="text-body-2 text-grey-darken-3 font-weight-medium">
+              <v-icon start icon="mdi-office-building-marker-outline" size="small" color="grey"></v-icon>
+              {{ item.agency?.name || 'Não vinculada' }}
+            </span>
           </template>
 
           <template v-slot:item.status="{ item }">
@@ -173,7 +214,7 @@ fetchCars();
           </template>
 
           <template v-slot:item.dailyRate="{ item }">
-            <span class="font-weight-medium text-grey-darken-3">
+            <span class="font-weight-bold text-grey-darken-4 text-body-1">
               {{ formatCurrency(Number(item.dailyRate)) }}
             </span>
           </template>
@@ -188,6 +229,7 @@ fetchCars();
                     variant="text" 
                     size="small" 
                     color="primary"
+                    class="mr-1"
                     @click="openEditCar(item)"
                   ></v-btn>
                 </template>
@@ -210,10 +252,11 @@ fetchCars();
           </template>
 
           <template v-slot:no-data>
-            <div class="pa-8 text-center">
-              <v-icon icon="mdi-database-off" size="40" color="grey-lighten-1" class="mb-2"></v-icon>
-              <p class="text-grey">Nenhum veículo encontrado.</p>
-              <v-btn variant="text" color="primary" @click="openNewCar" class="mt-2">
+            <div class="pa-10 text-center">
+              <v-icon icon="mdi-car-off" size="50" color="grey-lighten-2" class="mb-4"></v-icon>
+              <h3 class="text-h6 text-grey-darken-1 mb-2">Nenhum veículo encontrado</h3>
+              <p class="text-body-2 text-grey mb-4">Adicione carros para compor sua frota.</p>
+              <v-btn variant="flat" color="primary" @click="openNewCar" prepend-icon="mdi-plus">
                 Cadastrar o primeiro
               </v-btn>
             </div>
