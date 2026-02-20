@@ -8,11 +8,12 @@ import {
   Delete,
   ParseUUIDPipe,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { UserRole } from './enums/user-role.enum';
 import { User } from './entities/user.entity';
@@ -20,6 +21,7 @@ import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { UserResponseDto } from './dto/response-user.dto';
 import { FindUsersDto } from './dto/find-users.dto';
 
+@ApiTags('Users')
 @ApiBearerAuth('access-token')
 @Controller('users')
 export class UsersController {
@@ -28,8 +30,11 @@ export class UsersController {
   @Post()
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Cria um novo usuário (Admin)' })
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  create(
+    @Body() createUserDto: CreateUserDto,
+    @CurrentUser() currentUser: User,
+  ) {
+    return this.usersService.create(createUserDto, currentUser);
   }
 
   @Get('me')
@@ -57,14 +62,18 @@ export class UsersController {
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateUserDto: UpdateUserDto,
+    @CurrentUser() currentUser: User,
   ): Promise<UserResponseDto> {
-    return this.usersService.update(id, updateUserDto);
+    return this.usersService.update(id, updateUserDto, currentUser);
   }
 
   @Delete(':id')
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Remove um usuário (Soft Delete)' })
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.usersService.remove(id);
+  remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() currentUser: User,
+  ) {
+    return this.usersService.remove(id, currentUser);
   }
 }

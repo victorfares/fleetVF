@@ -12,6 +12,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { HashingServiceProtocol } from '../../auth/hashing/hashing.service';
 import { UserResponseDto } from './dto/response-user.dto';
 import { FindUsersDto } from './dto/find-users.dto';
+import { AuditService } from '../audit/audit.service';
+import { AuditAction } from '../audit/enums/audit-action.enum';
 
 @Injectable()
 export class UsersService {
@@ -19,6 +21,7 @@ export class UsersService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly hashingService: HashingServiceProtocol,
+    private readonly auditService: AuditService, // <-- Injetando Auditoria
   ) {}
 
   private mapToDto(entity: User | User[]): any {
@@ -26,7 +29,8 @@ export class UsersService {
       excludeExtraneousValues: true,
     });
   }
-  async create(createUserDto: CreateUserDto) {
+
+  async create(createUserDto: CreateUserDto, currentUser?: User) {
     const existingUser = await this.userRepository.findOne({
       where: { email: createUserDto.email },
       withDeleted: true,
@@ -45,6 +49,18 @@ export class UsersService {
     });
 
     const savedUser = await this.userRepository.save(user);
+
+    if (currentUser) {
+      await this.auditService.logAction(
+        currentUser,
+        AuditAction.CREATE,
+        'User',
+        savedUser.id,
+        null,
+        savedUser,
+      );
+    }
+
     return this.mapToDto(savedUser);
   }
 
@@ -104,7 +120,7 @@ export class UsersService {
     });
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
+  async update(id: string, updateUserDto: UpdateUserDto, currentUser: User) {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException(`Usuário com ID ${id} não encontrado`);
@@ -120,25 +136,52 @@ export class UsersService {
         throw new ConflictException('Este email já está em uso.');
       }
     }
+
+    const oldUser = { ...user };
+
     const updatedUser = await this.userRepository.preload({
       id: id,
       ...updateUserDto,
     });
+
     if (!updatedUser) {
       throw new NotFoundException(`Usuário com ID ${id} não encontrado`);
     }
+
     const savedUser = await this.userRepository.save(updatedUser);
+
+    await this.auditService.logAction(
+      currentUser,
+      AuditAction.UPDATE,
+      'User',
+      savedUser.id,
+      oldUser,
+      savedUser,
+    );
+
     return this.mapToDto(savedUser);
   }
 
-  async remove(id: string) {
+  async remove(id: string, currentUser: User) {
     const user = await this.userRepository.findOne({ where: { id } });
 
     if (!user) {
       throw new NotFoundException(`Usuário com ID ${id} não encontrado`);
     }
 
+    const oldUser = { ...user };
+
     await this.userRepository.softRemove(user);
+
+    await this.auditService.logAction(
+      currentUser,
+      AuditAction.DELETE,
+      'User',
+      id,
+      oldUser,
+      null,
+    );
+
     return { message: 'Usuário removido com sucesso' };
   }
 }

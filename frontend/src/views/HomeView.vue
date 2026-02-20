@@ -36,7 +36,6 @@ onMounted(() => {
   fetchCars();
 });
 
-// Ícones atualizados para opções 100% compatíveis e visualmente fortes
 const benefits = [
   { title: 'Transparência Total', desc: 'Sem taxas ocultas. Valor final garantido.', icon: 'mdi-check-decagram' },
   { title: 'Suporte 24/7', desc: 'Equipe pronta para ajudar a qualquer hora.', icon: 'mdi-headset' },
