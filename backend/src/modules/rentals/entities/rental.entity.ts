@@ -52,18 +52,22 @@ export class Rental {
   })
   status: RentalStatus;
 
-  @ManyToOne(() => User, (user) => user.rentals)
+  @ManyToOne(() => User, (user) => user.rentals, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'user_id' })
   user: User;
-
   @Column({ name: 'user_id' })
   @Exclude()
   userId: string;
 
-  @ManyToOne(() => Car, (car) => car.rentals)
+  @ManyToOne(() => Car, (car) => car.rentals, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'car_id' })
   car: Car;
-
   @Column({ name: 'car_id' })
   @Exclude()
   carId: string;

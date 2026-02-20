@@ -72,7 +72,6 @@ export function useCarForm(options: UseCarFormOptions) {
       formData.imageUrl = car.imageUrl || '';
       formData.agencyId = car.agency?.id || car.agencyId || null;
     } else {
-      // MODO CRIAÇÃO (Reset)
       formData.brand = '';
       formData.model = '';
       formData.licensePlate = '';

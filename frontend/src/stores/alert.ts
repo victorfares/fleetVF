@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
-// Define o formato perfeito para o v-alert do Vuetify
 export interface AlertMessage {
   id: string;
   type: 'success' | 'error' | 'warning' | 'info';
