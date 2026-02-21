@@ -43,6 +43,7 @@ export class AgenciesController {
     return this.agenciesService.findAll(paginationDto);
   }
 
+  @IsPublic()
   @Get(':id')
   @ApiOperation({ summary: 'Busca uma agência pelo ID' })
   findOne(@Param('id') id: string): Promise<AgencyResponseDto> {

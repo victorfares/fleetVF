@@ -62,12 +62,13 @@ function goToLogin() {
 </script>
 
 <template>
-  <v-container fluid class="fill-height bg-blue-darken-3 pa-0">
-    <v-row align="center" justify="center" class="ma-0 fill-height">
+  <v-container fluid class="fill-height bg-grey-lighten-5 pa-0">
+    <v-row align="center" justify="center" class="ma-0 fill-height py-8">
       <v-col cols="12" sm="8" md="6" lg="4" xl="3">
         
-        <v-card class="rounded-xl pa-4 bg-white" elevation="10">
+        <v-card class="rounded-xl pa-4 bg-white border" elevation="4">
           <v-card-title class="text-center pt-6 pb-2">
+            <v-icon icon="mdi-steering" size="x-large" color="amber-darken-1" class="mb-2"></v-icon>
             <h2 class="text-h4 font-weight-black text-black">Nova Conta</h2>
             <p class="text-body-2 text-grey-darken-2 mt-2 font-weight-medium">
               Junte-se à FleetVF e gerencie sua frota
@@ -98,7 +99,7 @@ function goToLogin() {
                 prepend-inner-icon="mdi-account-outline"
                 variant="outlined"
                 base-color="black"
-                color="primary"
+                color="amber-darken-2"
                 bg-color="white"
                 density="comfortable"
                 class="mb-2 text-black font-weight-medium"
@@ -112,7 +113,7 @@ function goToLogin() {
                 prepend-inner-icon="mdi-email-outline"
                 variant="outlined"
                 base-color="black"
-                color="primary"
+                color="amber-darken-2"
                 bg-color="white"
                 density="comfortable"
                 class="mb-2 text-black font-weight-medium"
@@ -129,7 +130,7 @@ function goToLogin() {
                 @click:append-inner="showPassword = !showPassword"
                 variant="outlined"
                 base-color="black"
-                color="primary"
+                color="amber-darken-2"
                 bg-color="white"
                 density="comfortable"
                 class="mb-2 text-black font-weight-medium"
@@ -144,7 +145,7 @@ function goToLogin() {
                 prepend-inner-icon="mdi-lock-check-outline"
                 variant="outlined"
                 base-color="black"
-                color="primary"
+                color="amber-darken-2"
                 bg-color="white"
                 density="comfortable"
                 class="text-black font-weight-medium"
@@ -153,10 +154,10 @@ function goToLogin() {
               <v-btn
                 block
                 size="large"
-                color="black"
+                color="amber-darken-1"
                 type="submit"
                 variant="flat"
-                class="mt-6 font-weight-bold text-body-1"
+                class="mt-6 font-weight-bold text-black text-body-1"
                 :loading="loading"
                 height="48"
                 rounded="lg"
@@ -165,20 +166,23 @@ function goToLogin() {
               </v-btn>
             </v-form>
 
-            <div class="text-center mt-6">
+            <div class="d-flex align-center justify-center mt-6">
               <span class="text-grey-darken-2 text-body-2 font-weight-medium">Já possui cadastro?</span>
-              <a 
-                class="text-primary font-weight-black ml-2 text-decoration-none cursor-pointer"
+              <v-btn 
+                variant="text" 
+                color="black" 
+                class="font-weight-black ml-1 px-2"
+                size="small"
                 @click="goToLogin"
               >
                 Fazer Login
-              </a>
+              </v-btn>
             </div>
 
           </v-card-text>
         </v-card>
 
-        <div class="text-center mt-6 text-white text-caption opacity-80">
+        <div class="text-center mt-6 text-grey-darken-1 text-caption font-weight-medium">
           &copy; {{ new Date().getFullYear() }} FleetVF. Todos os direitos reservados.
         </div>
 
@@ -186,15 +190,3 @@ function goToLogin() {
     </v-row>
   </v-container>
 </template>
-
-<style scoped>
-.cursor-pointer {
-  cursor: pointer;
-}
-.cursor-pointer:hover {
-  text-decoration: underline !important;
-}
-.opacity-80 {
-  opacity: 0.8;
-}
-</style>

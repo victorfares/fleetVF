@@ -48,7 +48,7 @@ api.interceptors.response.use(
       console.warn('Sessão expirada. Deslogando...');
       authStore.logout();
 
-      window.location.href = '/login';
+      window.location.href = '/login?expired=true';
     }
 
     return Promise.reject(error);
