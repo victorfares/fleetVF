@@ -8,7 +8,14 @@ import { UpdateCarDto } from './dto/update-car.dto';
 import { plainToInstance } from 'class-transformer';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Car } from './entities/car.entity';
-import { Repository, ILike, FindOptionsWhere } from 'typeorm';
+import {
+  Repository,
+  ILike,
+  FindOptionsWhere,
+  Between,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+} from 'typeorm';
 import { AgenciesService } from '../agencies/agencies.service';
 import { FindCarsDto } from './dto/find-cars.dto';
 import { CarResponseDto } from './dto/car-response.dto';
@@ -56,7 +63,14 @@ export class CarsService {
   }
 
   async findAll(findCarsDto: FindCarsDto) {
-    const { limit = 10, offset = 0, search, agencyId } = findCarsDto;
+    const {
+      limit = 10,
+      offset = 0,
+      search,
+      agencyId,
+      minPrice,
+      maxPrice,
+    } = findCarsDto;
 
     let where: FindOptionsWhere<Car> | FindOptionsWhere<Car>[] = {};
 
@@ -67,14 +81,28 @@ export class CarsService {
       ];
     }
 
+    const andConditions: FindOptionsWhere<Car> = {};
+
     if (agencyId) {
+      andConditions.agency = { id: agencyId };
+    }
+
+    if (minPrice !== undefined && maxPrice !== undefined) {
+      andConditions.dailyRate = Between(minPrice, maxPrice);
+    } else if (minPrice !== undefined) {
+      andConditions.dailyRate = MoreThanOrEqual(minPrice);
+    } else if (maxPrice !== undefined) {
+      andConditions.dailyRate = LessThanOrEqual(maxPrice);
+    }
+
+    if (Object.keys(andConditions).length > 0) {
       if (Array.isArray(where)) {
         where = where.map((condition) => ({
           ...condition,
-          agency: { id: agencyId },
+          ...andConditions,
         }));
       } else {
-        where = { agency: { id: agencyId } };
+        where = { ...where, ...andConditions };
       }
     }
 
@@ -93,7 +121,6 @@ export class CarsService {
       offset,
     };
   }
-
   async findOne(id: string) {
     const car = await this.carRepository.findOne({
       where: { id },
@@ -109,7 +136,6 @@ export class CarsService {
 
   // Recebe o usuário logado
   async update(id: string, updateCarDto: UpdateCarDto, currentUser: User) {
-    // 1. Guarda o estado ANTIGO do carro antes de alterar
     const currentCar = await this.carRepository.findOne({
       where: { id },
       relations: ['agency'],
