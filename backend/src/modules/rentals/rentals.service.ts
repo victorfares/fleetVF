@@ -81,10 +81,12 @@ export class RentalsService {
           `Usuário com ID #${userId} não encontrado.`,
         );
 
-      const car = await manager.findOneBy(Car, { id: carId });
+      const car = await manager.findOne(Car, {
+        where: { id: carId },
+        relations: ['agency'],
+      });
       if (!car)
         throw new NotFoundException(`Carro com ID #${carId} não encontrado.`);
-
       const pickupAgency = await manager.findOneBy(Agency, {
         id: pickupAgencyId,
       });
@@ -92,6 +94,11 @@ export class RentalsService {
         throw new NotFoundException(
           `Agência de retirada com ID #${pickupAgencyId} não encontrada.`,
         );
+      if (car.agency.id !== pickupAgencyId) {
+        throw new BadRequestException(
+          `O veículo selecionado encontra-se fisicamente em outra agência. Escolha um veículo disponível na agência de retirada desejada.`,
+        );
+      }
 
       const returnAgency =
         targetReturnId === pickupAgencyId
@@ -101,15 +108,6 @@ export class RentalsService {
         throw new NotFoundException(
           `Agência de devolução com ID #${targetReturnId} não encontrada.`,
         );
-
-      if (
-        car.status === CarStatus.MAINTENANCE ||
-        car.status === CarStatus.RENTED
-      ) {
-        throw new BadRequestException(
-          `Veículo indisponível (Status: ${car.status}). Escolha outro carro.`,
-        );
-      }
 
       const conflictingRental = await manager.findOne(Rental, {
         where: {
@@ -288,6 +286,16 @@ export class RentalsService {
   ) {
     const rental = await this.findOne(id);
 
+    if (
+      updateRentalDto.startDate ||
+      updateRentalDto.endDate ||
+      updateRentalDto.carId
+    ) {
+      throw new BadRequestException(
+        'Para alterar datas ou o veículo, cancele esta reserva e crie uma nova.',
+      );
+    }
+
     if (updateRentalDto.status === RentalStatus.COMPLETED) {
       return this.finalizeRental(rental, updateRentalDto, currentUser);
     }
@@ -416,6 +424,23 @@ export class RentalsService {
       );
     }
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const rentalStart = new Date(rental.startDate);
+    rentalStart.setHours(0, 0, 0, 0);
+
+    if (today < rentalStart) {
+      throw new BadRequestException(
+        `O check-in só pode ser realizado a partir da data de retirada (${rentalStart.toLocaleDateString()}).`,
+      );
+    }
+
+    if (rental.car.status !== CarStatus.AVAILABLE) {
+      throw new BadRequestException(
+        `Não é possível realizar o check-in. O veículo físico encontra-se indisponível no momento (Status atual: ${rental.car.status}).`,
+      );
+    }
+
     const oldRental = { ...rental };
     const queryRunner = this.dataSource.createQueryRunner();
 
@@ -429,6 +454,7 @@ export class RentalsService {
 
       rental.status = RentalStatus.ACTIVE;
       await queryRunner.manager.save(rental);
+      rental.startMileage = rental.car.currentMileage;
 
       await queryRunner.commitTransaction();
 
