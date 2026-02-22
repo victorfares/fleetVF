@@ -7,9 +7,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: adminpassword
-      POSTGRES_DB: fleet_db
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASS:-postgres_local_senha}
+      POSTGRES_DB: ${DB_NAME:-fleet_db}
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
